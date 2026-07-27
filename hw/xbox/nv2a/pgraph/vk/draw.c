@@ -1498,6 +1498,24 @@ static void begin_render_pass(PGRAPHState *pg)
 
     nv2a_profile_inc_counter(NV2A_PROF_PIPELINE_RENDERPASSES);
 
+    /* loc-graphics-research (zero-copy): the cached render passes declare
+     * ATTACHMENT_OPTIMAL initial layouts. A zero-copy texture bind may have
+     * left a bound target in SHADER_READ_ONLY_OPTIMAL — restore it (also the
+     * write-after-read barrier for the borrowed sampling). No-op otherwise. */
+    if (r->color_binding &&
+        r->color_binding->image_layout !=
+            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
+        pgraph_vk_surface_transition(pg, r->command_buffer, r->color_binding,
+                                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    }
+    if (r->zeta_binding &&
+        r->zeta_binding->image_layout !=
+            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+        pgraph_vk_surface_transition(
+            pg, r->command_buffer, r->zeta_binding,
+            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+    }
+
     unsigned int vp_width = pg->surface_binding_dim.width,
                  vp_height = pg->surface_binding_dim.height;
     pgraph_apply_scaling_factor(pg, &vp_width, &vp_height);

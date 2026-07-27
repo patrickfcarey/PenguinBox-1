@@ -159,6 +159,13 @@ typedef struct SurfaceBinding {
     VkImageView image_view;
     VmaAllocation allocation;
 
+    /* loc-graphics-research (zero-copy): tracked layout of `image`. Resting
+     * state is (COLOR|DEPTH_STENCIL)_ATTACHMENT_OPTIMAL; the only code that
+     * may LEAVE a different resting layout is the zero-copy texture bind
+     * (SHADER_READ_ONLY_OPTIMAL) — begin_render_pass restores bound targets.
+     * All transitions of `image` go through pgraph_vk_surface_transition. */
+    VkImageLayout image_layout;
+
     // Used for scaling
     VkImage image_scratch;
     VkImageLayout image_scratch_current_layout;
@@ -243,6 +250,16 @@ typedef struct TextureBinding {
     uint64_t hash;
     unsigned int draw_time;
     uint32_t submit_time;
+    /* loc-graphics-research (XEMU_SURF2TEX_ZEROCOPY): this node's image_view
+     * borrows a surface's VkImage (image/allocation are VK_NULL_HANDLE and
+     * must not be destroyed). borrow_image + borrow_gen (snapshot of
+     * r->surface_generation) staleness-check the borrow on cache hit. */
+    bool borrowed;
+    uint32_t borrow_gen;
+    VkImage borrow_image;
+    /* Valid ONLY while borrow_gen == r->surface_generation (no invalidation
+     * since the borrow was taken); used for the bind-time layout ensure. */
+    SurfaceBinding *borrow_surface;
 } TextureBinding;
 
 typedef struct QueryReport {
@@ -609,6 +626,9 @@ typedef struct PGRAPHVkState {
 
     QTAILQ_HEAD(, SurfaceBinding) surfaces;
     QTAILQ_HEAD(, SurfaceBinding) invalid_surfaces;
+    /* loc-graphics-research (zero-copy): bumped on every invalidate_surface;
+     * borrowed texture nodes staleness-check against it on cache hit. */
+    uint32_t surface_generation;
     SurfaceBinding *color_binding, *zeta_binding;
     bool downloads_pending;
     QemuEvent downloads_complete;
@@ -937,6 +957,9 @@ bool pgraph_vk_narrowfence_enabled(void);
 void pgraph_vk_wait_for_surface_write(PGRAPHState *pg, SurfaceBinding *surface);
 SurfaceBinding *pgraph_vk_surface_get_within(NV2AState *d, hwaddr addr);
 bool pgraph_vk_alias_surfaces_enabled(void);
+void pgraph_vk_surface_transition(PGRAPHState *pg, VkCommandBuffer cmd,
+                                  SurfaceBinding *surface, VkImageLayout to);
+VkImageLayout pgraph_vk_surface_rest_layout(const SurfaceBinding *surface);
 void pgraph_vk_wait_for_surface_download(SurfaceBinding *e);
 void pgraph_vk_download_dirty_surfaces(NV2AState *d);
 int pgraph_vk_download_surfaces_in_range_if_dirty(PGRAPHState *pg, hwaddr start, hwaddr size);

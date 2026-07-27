@@ -1345,10 +1345,8 @@ static void render_display_async(PGRAPHState *pg, SurfaceBinding *surface)
     pgraph_vk_begin_debug_marker(r, cmd, RGBA_YELLOW,
         "Async Display Surface %08"HWADDR_PRIx, surface->vram_addr);
 
-    pgraph_vk_transition_image_layout(pg, cmd, surface->image,
-                                      surface->host_fmt.vk_format,
-                                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    pgraph_vk_surface_transition(pg, cmd, surface,
+                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     pgraph_vk_transition_image_layout(
         pg, cmd, slot->image, VK_FORMAT_R8G8B8A8_UNORM,
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
@@ -1391,10 +1389,8 @@ static void render_display_async(PGRAPHState *pg, SurfaceBinding *surface)
 
     vkCmdEndRenderPass(cmd);
 
-    pgraph_vk_transition_image_layout(pg, cmd, surface->image,
-                                      surface->host_fmt.vk_format,
-                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    pgraph_vk_surface_transition(pg, cmd, surface,
+                                 pgraph_vk_surface_rest_layout(surface));
 
     pgraph_vk_transition_image_layout(pg, cmd, slot->image,
                                       VK_FORMAT_R8G8B8A8_UNORM,
@@ -1484,10 +1480,8 @@ static void render_display(PGRAPHState *pg, SurfaceBinding *surface)
     pgraph_vk_begin_debug_marker(r, cmd, RGBA_YELLOW,
         "Display Surface %08"HWADDR_PRIx, surface->vram_addr);
 
-    pgraph_vk_transition_image_layout(pg, cmd, surface->image,
-                                      surface->host_fmt.vk_format,
-                                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    pgraph_vk_surface_transition(pg, cmd, surface,
+                                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
     pgraph_vk_transition_image_layout(
         pg, cmd, disp->image, VK_FORMAT_R8G8B8A8_UNORM,
         VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
@@ -1548,10 +1542,8 @@ static void render_display(PGRAPHState *pg, SurfaceBinding *surface)
                    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 #endif
 
-    pgraph_vk_transition_image_layout(pg, cmd, surface->image,
-                                      surface->host_fmt.vk_format,
-                                      VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-                                      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+    pgraph_vk_surface_transition(pg, cmd, surface,
+                                 pgraph_vk_surface_rest_layout(surface));
 
     pgraph_vk_transition_image_layout(pg, cmd, disp->image,
                                       VK_FORMAT_R8G8B8_UNORM,
