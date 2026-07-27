@@ -1045,6 +1045,28 @@ static bool check_surfaces_overlap(const SurfaceBinding *surface,
                                         other_surface->size);
 }
 
+/* loc-graphics-research: XEMU_ALIAS_SURFACES getenv-once gate. -1 = unprobed,
+ * 0 = off, 1 = on. XEMU_NO_ALIAS_SURFACES wins. Default OFF — the OFF path is
+ * byte-identical to the historical evict-on-overlap flow. */
+static bool alias_surfaces_enabled(void)
+{
+    static int state = -1;
+    if (state < 0) {
+        if (getenv("XEMU_NO_ALIAS_SURFACES")) {
+            state = 0;
+        } else {
+            state = getenv("XEMU_ALIAS_SURFACES") ? 1 : 0;
+            if (state == 1) {
+                fprintf(stderr,
+                        "nv2a: XEMU_ALIAS_SURFACES on — small surface creates "
+                        "keep large overlapped parents resident (no "
+                        "evict+download cascade)\n");
+            }
+        }
+    }
+    return state == 1;
+}
+
 static void invalidate_overlapping_surfaces(NV2AState *d,
                                             SurfaceBinding const *surface)
 {
@@ -1053,6 +1075,31 @@ static void invalidate_overlapping_surfaces(NV2AState *d,
     SurfaceBinding *other_surface, *next_surface;
     QTAILQ_FOREACH_SAFE (other_surface, &r->surfaces, entry, next_surface) {
         if (check_surfaces_overlap(surface, other_surface)) {
+            /* loc-graphics-research (XEMU_ALIAS_SURFACES): Line of Contact's
+             * shadow pipeline creates small transient color blocks INSIDE the
+             * 6.5MB shadow-map zeta's footprint. Historically each create
+             * evicts the parent (downloading the whole 6.4MB to guest RAM),
+             * and the next full-map texture bind then re-uploads it — a
+             * multi-MB CPU round-trip per cascade. Keep the LARGE parent
+             * resident instead: readers of the parent's range serve its image
+             * (pre-clobber content — on real hardware the clobbered rows would
+             * be garbage depth the game does not meaningfully sample), and the
+             * fresher child wins for its own range via the draw_time rule in
+             * the surface-as-texture paths. Exact-base conflicts still evict
+             * (surface_put asserts base uniqueness), as do parents not
+             * decisively larger, and parents with a pending upload. */
+            if (alias_surfaces_enabled() &&
+                (uint64_t)surface->size * 4 <= other_surface->size &&
+                !other_surface->upload_pending) {
+                /* Exact-base children are allowed too (LoC re-uses the shadow
+                 * map's own base for a small swizzled block): surfaces are
+                 * inserted at the list head, so pgraph_vk_surface_get()
+                 * returns the newest at a base, and the look-deeper scans (in
+                 * the texture bind and the surface target switch) find the
+                 * kept parent when the newest is shape-incompatible. */
+                nv2a_profile_inc_counter(NV2A_PROF_ALIAS_KEPT);
+                continue;
+            }
             trace_nv2a_pgraph_surface_evict_overlapping(
                 other_surface->vram_addr, other_surface->width,
                 other_surface->height, other_surface->pitch);
@@ -1066,12 +1113,20 @@ static void surface_put(NV2AState *d, SurfaceBinding *surface)
 {
     PGRAPHVkState *r = d->pgraph.vk_renderer_state;
 
-    assert(pgraph_vk_surface_get(d, surface->vram_addr) == NULL);
+    /* Alias mode keeps large same-base parents resident; the new surface is
+     * inserted at the head so exact-base lookups resolve to the newest. */
+    assert(alias_surfaces_enabled() ||
+           pgraph_vk_surface_get(d, surface->vram_addr) == NULL);
 
     invalidate_overlapping_surfaces(d, surface);
     register_cpu_access_callback(d, surface);
 
     QTAILQ_INSERT_HEAD(&r->surfaces, surface, entry);
+}
+
+bool pgraph_vk_alias_surfaces_enabled(void)
+{
+    return alias_surfaces_enabled();
 }
 
 SurfaceBinding *pgraph_vk_surface_get(NV2AState *d, hwaddr addr)
@@ -1899,6 +1954,23 @@ static void update_surface_part(NV2AState *d, bool upload, bool color)
         unbind_surface(d, color);
 
         SurfaceBinding *surface = pgraph_vk_surface_get(d, target.vram_addr);
+        /* Alias mode: the newest surface at this base may be a small alias
+         * child (LoC: the 256x256 swizzled block at the shadow map's base).
+         * Look deeper for a compatible same-base surface — reusing the kept
+         * parent instead of evicting the child and re-creating (which would
+         * cost the parent's multi-MB eviction download every frame). */
+        if (alias_surfaces_enabled() && surface != NULL &&
+            !check_surface_compatibility(surface, &target, false)) {
+            SurfaceBinding *deeper;
+            QTAILQ_FOREACH(deeper, &r->surfaces, entry) {
+                if (deeper != surface &&
+                    deeper->vram_addr == target.vram_addr &&
+                    check_surface_compatibility(deeper, &target, false)) {
+                    surface = deeper;
+                    break;
+                }
+            }
+        }
         if (surface != NULL) {
             // FIXME: Support same color/zeta surface target? In the mean time,
             // if the surface we just found is currently bound, just unbind it.
@@ -1984,6 +2056,18 @@ static void update_surface_part(NV2AState *d, bool upload, bool color)
                 surface->upload_pending |= mem_dirty;
                 pg->surface_zeta.buffer_dirty |= color;
                 should_create = false;
+            } else if (alias_surfaces_enabled() &&
+                       (uint64_t)target.size * 4 <= surface->size &&
+                       !surface->upload_pending) {
+                /* loc-graphics-research (XEMU_ALIAS_SURFACES): the game
+                 * re-targets a LARGE surface's base as a much smaller
+                 * incompatible target (LoC: the shadow-map zeta's base as a
+                 * 256x256 color block). Historically this evicted the parent
+                 * (multi-MB download) every cycle — the last leg of the
+                 * cascade. Keep the parent; the small target is created
+                 * alongside and invalidate_overlapping_surfaces alias-keeps
+                 * the parent under it. */
+                nv2a_profile_inc_counter(NV2A_PROF_ALIAS_KEPT);
             } else {
                 trace_nv2a_pgraph_surface_evict_reason(
                     "incompatible", surface->vram_addr);

@@ -1622,7 +1622,12 @@ static bool is_pow2_square(unsigned int w, unsigned int h)
 }
 
 /* Any OTHER resident surface overlapping [base, base+len) would contribute
- * bytes the single-source paths cannot see — bail to the fallback there. */
+ * bytes the single-source paths cannot see — bail to the fallback there.
+ * Freshness rule (alias tolerance): a surface drawn no later than `self`
+ * cannot hold newer content for the range — `self`'s own draw covered its
+ * whole range afterwards — so stale alias PARENTS (XEMU_ALIAS_SURFACES keeps
+ * the big shadow-map zeta resident under its child blocks) are ignored, while
+ * a FRESHER overlapping sibling still forces the fallback. */
 static bool other_surface_overlaps_range(PGRAPHVkState *r,
                                          const SurfaceBinding *self,
                                          hwaddr base, size_t len)
@@ -1630,6 +1635,9 @@ static bool other_surface_overlaps_range(PGRAPHVkState *r,
     SurfaceBinding *s;
     QTAILQ_FOREACH(s, &r->surfaces, entry) {
         if (s == self) {
+            continue;
+        }
+        if (s->draw_time <= self->draw_time) {
             continue;
         }
         if (s->vram_addr + s->size > base && s->vram_addr < base + len) {
@@ -2107,6 +2115,26 @@ static void create_texture(PGRAPHState *pg, int texture_idx)
 
         if (surface_to_texture && surface->upload_pending) {
             pgraph_vk_upload_surface_data(d, surface, false);
+        }
+
+        /* Alias mode: the newest surface at this base may be a small alias
+         * child; a compatible same-base parent (the shadow-map zeta under
+         * its color block) can serve the bind on the historical exact path. */
+        if (!surface_to_texture && pgraph_vk_alias_surfaces_enabled()) {
+            PGRAPHVkState *r_ = pg->vk_renderer_state;
+            SurfaceBinding *deeper;
+            QTAILQ_FOREACH(deeper, &r_->surfaces, entry) {
+                if (deeper != surface &&
+                    deeper->vram_addr == texture_vram_offset &&
+                    check_surface_to_texture_compatiblity(deeper, &state)) {
+                    surface = deeper;
+                    surface_to_texture = true;
+                    if (surface->upload_pending) {
+                        pgraph_vk_upload_surface_data(d, surface, false);
+                    }
+                    break;
+                }
+            }
         }
     } else if (surface) {
         s2t_miss_counter = NV2A_PROF_S2T_MISS_MIPS; /* levels > 1 gate */
