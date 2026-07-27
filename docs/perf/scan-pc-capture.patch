@@ -1,0 +1,100 @@
+sb-graphics-research (perf Tier-1): faithful guest-EIP + register capture for
+the instruction(s) that CPU-read a watchpoint-guarded NV2A surface (the Steel
+Battalion radar scan). OFF by default; armed by env var XEMU_SCAN_PC_CAPTURE.
+
+Why this site: callback-guarded surface pages get BP_MEM_READ folded into
+wp_flags at TLB-fill time (cputlb.c:1104-1107 -> TLB_WATCHPOINT at :1170-1171),
+so every guest read to the radar surface traps into mmu_watch_or_dirty() with
+the host return address `ra` in scope. env->eip is stale between TB sync points,
+so cpu_restore_state(cpu, ra) reconstructs a faithful EIP+regs before sampling
+-- the same primitive cpu_check_watchpoint() uses two lines later. Dedups by
+EIP: the log is exactly the set of distinct scan-loop read instructions.
+
+Apply from repo root:  git apply docs/perf/scan-pc-capture.patch
+Run:  XEMU_SCAN_PC_CAPTURE=64 ./build/qemu-system-i386 ...    (log -> stderr)
+Read EAX at the reported EIP: it is the walking pixel pointer; EAX minus the
+value of guest global [0x351bdc] (the radar buffer base) = the byte offset,
+== row*0x200 + col*4, matching the measured trace (e.g. row13,col11 = 0x1a2c).
+
+--- a/accel/tcg/cputlb.c
++++ b/accel/tcg/cputlb.c
+@@ -1691,6 +1691,71 @@
+     return maybe_resized;
+ }
+ 
++#ifdef XBOX
++/*
++ * sb-graphics-research (perf Tier-1): one-shot-per-EIP capture of the guest
++ * instruction + integer register file that reads a watchpoint-guarded NV2A
++ * surface (the Steel Battalion radar scan loop).  Armed by the environment
++ * variable XEMU_SCAN_PC_CAPTURE (=max captures, default 64 when set to a
++ * non-numeric/"1" value).  Reads only.
++ *
++ * env->eip is only synced at TB boundaries, so it is stale in the middle of a
++ * TB.  cpu_restore_state(cpu, ra) reconstructs a faithful eip/regs from the
++ * host return address `ra` before we sample -- identical to what the
++ * cpu_check_watchpoint() call in mmu_watch_or_dirty() already does.  We dedup
++ * by eip so the output is precisely the distinct read instructions, and only
++ * sample addresses that hit a registered surface callback (so unrelated
++ * gdb/CPU watchpoints are ignored).
++ */
++static void xbox_scan_pc_capture(CPUState *cpu, vaddr addr, int size,
++                                 int wp, CPUTLBEntryFull *full, uintptr_t ra)
++{
++    static int budget = -1;
++    static uint32_t seen_eip[64];
++    static int nseen;
++
++    if (budget < 0) {
++        const char *e = getenv("XEMU_SCAN_PC_CAPTURE");
++        budget = e ? (atoi(e) > 0 ? atoi(e) : 64) : 0;
++    }
++    if (budget == 0 || wp != BP_MEM_READ) {
++        return;
++    }
++
++    /* Only sample reads that actually hit a registered surface callback. */
++    ram_addr_t ram_addr = (full->xlat_section & TARGET_PAGE_MASK) + addr;
++    if (!(mem_access_callback_address_matches(cpu, ram_addr, size) &
++          BP_MEM_READ)) {
++        return;
++    }
++
++    bool ok = cpu_restore_state(cpu, ra);   /* faithful eip/regs from host pc */
++    CPUArchState *env = cpu_env(cpu);
++    uint32_t eip = env->eip;
++
++    for (int i = 0; i < nseen; i++) {
++        if (seen_eip[i] == eip) {
++            return;                          /* this insn already logged */
++        }
++    }
++    if (nseen < (int)ARRAY_SIZE(seen_eip)) {
++        seen_eip[nseen++] = eip;
++    }
++    budget--;
++
++    fprintf(stderr,
++            "scan-pc: eip=%08x%s eax=%08x ebx=%08x ecx=%08x edx=%08x "
++            "esi=%08x edi=%08x ebp=%08x esp=%08x gaddr=%08x sz=%d "
++            "(left=%d)\n",
++            eip, ok ? "" : "!", (uint32_t)env->regs[R_EAX],
++            (uint32_t)env->regs[R_EBX], (uint32_t)env->regs[R_ECX],
++            (uint32_t)env->regs[R_EDX], (uint32_t)env->regs[R_ESI],
++            (uint32_t)env->regs[R_EDI], (uint32_t)env->regs[R_EBP],
++            (uint32_t)env->regs[R_ESP], (uint32_t)addr, size, budget);
++}
++#endif /* XBOX */
++
++
+ /**
+  * mmu_watch_or_dirty
+  * @cpu: generic cpu state
+@@ -1713,6 +1778,7 @@
+     if (flags & TLB_WATCHPOINT) {
+         int wp = access_type == MMU_DATA_STORE ? BP_MEM_WRITE : BP_MEM_READ;
+ #ifdef XBOX
++        xbox_scan_pc_capture(cpu, addr, size, wp, full, ra);
+         mem_check_access_callback_vaddr(cpu, addr, size, wp, full);
+ #endif
+         cpu_check_watchpoint(cpu, addr, size, full->attrs, wp, ra);
