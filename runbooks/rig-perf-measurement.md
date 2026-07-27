@@ -55,6 +55,12 @@ toggle "ON" lines in `~/coldboot.log`. **H-2 first, as its own command** (pgrep
 `-x pcsx2-qt`, `-x mupen64plus`, `-f "[q]emu-system-i386"` with the `[q]` bracket
 over ssh) — never chain a launch behind the check.
 
+**Firmware (for reproducibility).** All measurements used: boot ROM
+`mcpx_1.0.bin` (MCPX v1.0, sha1 `5d270675…211cef`) + flash BIOS
+`xbox-4627_debug.bin` (1 MB debug kernel 4627, sha1 `a5503364…64bb7d`),
+via `bootrom_path`/`flashrom_path`. Microsoft firmware is user-supplied, not
+in-repo. Full hashes in `docs/discord-perf-writeup.md` § Firmware.
+
 ## Reusable frame-limiter RE method (for other titles)
 
 The toolchain that cracked SB's 30-lock, reusable per-title:

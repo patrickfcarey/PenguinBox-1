@@ -81,6 +81,16 @@ These remove the serial "present wall." **Opt-in (default off) — set the flags
 ### Seeing the frame rate
 Use xemu's **built-in Video Debug overlay** (move the mouse to reveal the menu bar → **Debug → Video**). It shows the true guest flip rate. (Note: MangoHud misreports on this GL/PRIME display path — don't trust it here.)
 
+### Firmware (BIOS) used
+Every number here was captured with this firmware set. The Microsoft firmware is **user-supplied, not distributed** with the fork — these hashes are for verifying you're on the same setup:
+
+| role | file | size | sha1 |
+| ---- | ---- | ---- | ---- |
+| boot ROM (MCPX v1.0) | `mcpx_1.0.bin` | 512 B | `5d270675b54eb8071b480e42d22a3015ac211cef` |
+| flash BIOS (debug kernel 4627) | `xbox-4627_debug.bin` | 1,048,576 B | `a5503364b2b07b9bb01cb6ef2fb412c25364bb7d` |
+
+Set via `bootrom_path` / `flashrom_path` in the xemu config. A retail **3944** (256 KB) BIOS also boots; the 1 MB **debug** BIOS was used for development (unsigned-code friendly).
+
 ---
 
 ## What we did (the short story)
