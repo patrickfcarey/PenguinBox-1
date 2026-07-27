@@ -9,7 +9,32 @@
 
 #include "qemu/osdep.h"
 
+#ifdef _WIN32
+/*
+ * Windows has no <dlfcn.h>. VR (OpenXR / WiVRn) is a Linux-rig-only path, so on
+ * Windows these shims let the loader compile and then fail cleanly at runtime:
+ * LoadLibraryA("libopenxr_loader.so") returns NULL, vr_xr_loader_init() returns
+ * false, and xemu runs flat. Native Windows OpenXR is out of scope here.
+ */
+#include <windows.h>
+#define RTLD_NOW   0
+#define RTLD_LOCAL 0
+static inline void *dlopen(const char *name, int flags)
+{
+    (void)flags;
+    return (void *)LoadLibraryA(name);
+}
+static inline void *dlsym(void *handle, const char *symbol)
+{
+    return (void *)(uintptr_t)GetProcAddress((HMODULE)handle, symbol);
+}
+static inline const char *dlerror(void)
+{
+    return "OpenXR runtime unavailable (no dlfcn on Windows)";
+}
+#else
 #include <dlfcn.h>
+#endif
 
 #include "vr_xr_loader.h"
 

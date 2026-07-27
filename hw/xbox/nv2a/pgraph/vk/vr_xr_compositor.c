@@ -39,6 +39,9 @@
  */
 
 #include "qemu/osdep.h"
+
+#include <math.h>
+
 #include "ui/xemu-settings.h"
 #include "renderer.h"
 #include "vr.h"
