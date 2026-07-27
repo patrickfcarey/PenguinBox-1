@@ -414,6 +414,9 @@ typedef struct PGRAPHVkComputeState {
     VkPipelineLayout pipeline_layout;
     Lru pipeline_cache;
     ComputePipeline *pipeline_cache_entries;
+    /* loc-graphics-research: lazy-created Morton deswizzle pipeline for the
+     * surface-as-swizzled-texture bounce (XEMU_SURF2TEX_EXT). */
+    VkPipeline deswizzle_pipeline;
 } PGRAPHVkComputeState;
 
 typedef struct PGRAPHVkState {
@@ -951,6 +954,9 @@ void pgraph_vk_init_compute(PGRAPHState *pg);
 bool pgraph_vk_compute_needs_finish(PGRAPHVkState *r);
 void pgraph_vk_compute_finish_complete(PGRAPHVkState *r);
 void pgraph_vk_finalize_compute(PGRAPHState *pg);
+void pgraph_vk_dispatch_deswizzle_u32(PGRAPHState *pg, VkCommandBuffer cmd,
+                                      unsigned int tex_w, unsigned int tex_h,
+                                      unsigned int src_bias_words);
 void pgraph_vk_pack_depth_stencil(PGRAPHState *pg, SurfaceBinding *surface,
                                   VkCommandBuffer cmd, VkBuffer src,
                                   VkBuffer dst, bool downscale);

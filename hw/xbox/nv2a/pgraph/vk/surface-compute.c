@@ -244,9 +244,13 @@ static void create_compute_pipeline_layout(PGRAPHState *pg)
 {
     PGRAPHVkState *r = pg->vk_renderer_state;
 
+    /* 3 u32s: the historical pack/unpack shaders use the first two
+     * (width_in, width_out); the deswizzle bounce adds src_bias_words. A
+     * larger range than a shader consumes is legal; existing dispatches
+     * still push 8 bytes at offset 0. */
     VkPushConstantRange push_constant_range = {
         .stageFlags = VK_SHADER_STAGE_COMPUTE_BIT,
-        .size = 2 * sizeof(uint32_t),
+        .size = 3 * sizeof(uint32_t),
     };
     VkPipelineLayoutCreateInfo pipeline_layout_info = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
@@ -317,6 +321,93 @@ static void update_descriptor_sets(PGRAPHState *pg,
     vkUpdateDescriptorSets(r->device, count, descriptor_writes, 0, NULL);
 
     r->compute.descriptor_set_index += 1;
+}
+
+/* loc-graphics-research: Morton (Xbox square swizzle) deswizzle, u32 texels.
+ * Src = the raw byte stream of the memory the texture reads (bounced from a
+ * LINEAR surface image via vkCmdCopyImageToBuffer); dst = linear texel order
+ * for vkCmdCopyBufferToImage into the texture image. Bit convention matches
+ * pgraph/swizzle.c generate_swizzle_masks for width==height (x gets the even
+ * bits starting at bit 0). Square power-of-two textures only (enforced by the
+ * caller); one invocation per texel. */
+static const char *deswizzle_u32_square_glsl =
+    "layout(push_constant) uniform PushConstants { uint tex_w, tex_h, "
+    "src_bias; };\n"
+    "layout(set = 0, binding = 0) buffer Src { uint src[]; };\n"
+    "layout(set = 0, binding = 1) buffer Dst { uint dst[]; };\n"
+    "layout(set = 0, binding = 2) buffer Unused { uint unused[]; };\n"
+    "uint part1by1(uint v) {\n"
+    "    v &= 0x0000FFFFu;\n"
+    "    v = (v | (v << 8)) & 0x00FF00FFu;\n"
+    "    v = (v | (v << 4)) & 0x0F0F0F0Fu;\n"
+    "    v = (v | (v << 2)) & 0x33333333u;\n"
+    "    v = (v | (v << 1)) & 0x55555555u;\n"
+    "    return v;\n"
+    "}\n"
+    "void main() {\n"
+    "    uint gid = gl_GlobalInvocationID.x;\n"
+    "    if (gid >= tex_w * tex_h) return;\n"
+    "    uint x = gid % tex_w;\n"
+    "    uint y = gid / tex_w;\n"
+    "    uint s = part1by1(x) | (part1by1(y) << 1u);\n"
+    "    dst[gid] = src[src_bias + s];\n"
+    "}\n";
+
+#define DESWIZZLE_WORKGROUP_SIZE 256
+
+void pgraph_vk_dispatch_deswizzle_u32(PGRAPHState *pg, VkCommandBuffer cmd,
+                                      unsigned int tex_w, unsigned int tex_h,
+                                      unsigned int src_bias_words)
+{
+    PGRAPHVkState *r = pg->vk_renderer_state;
+
+    if (r->compute.deswizzle_pipeline == VK_NULL_HANDLE) {
+        gchar *glsl = g_strdup_printf(
+            "#version 450\n"
+            "layout(local_size_x = %d, local_size_y = 1, local_size_z = 1) "
+            "in;\n"
+            "%s",
+            DESWIZZLE_WORKGROUP_SIZE, deswizzle_u32_square_glsl);
+        r->compute.deswizzle_pipeline = create_compute_pipeline(r, glsl);
+        g_free(glsl);
+    }
+
+    VkDescriptorBufferInfo buffers[3] = {
+        {
+            .buffer = r->storage_buffers[BUFFER_COMPUTE_DST].buffer,
+            .offset = 0,
+            .range = VK_WHOLE_SIZE,
+        },
+        {
+            .buffer = r->storage_buffers[BUFFER_COMPUTE_SRC].buffer,
+            .offset = 0,
+            .range = VK_WHOLE_SIZE,
+        },
+        {
+            .buffer = r->storage_buffers[BUFFER_COMPUTE_DST].buffer,
+            .offset = 0,
+            .range = VK_WHOLE_SIZE,
+        },
+    };
+    update_descriptor_sets(pg, buffers, ARRAY_SIZE(buffers));
+
+    uint32_t total = tex_w * tex_h;
+    uint32_t group_count = DIV_ROUND_UP(total, DESWIZZLE_WORKGROUP_SIZE);
+
+    pgraph_vk_begin_debug_marker(r, cmd, RGBA_PINK, __func__);
+    vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_COMPUTE,
+                      r->compute.deswizzle_pipeline);
+    vkCmdBindDescriptorSets(
+        cmd, VK_PIPELINE_BIND_POINT_COMPUTE, r->compute.pipeline_layout, 0, 1,
+        &r->compute.descriptor_sets[r->compute.descriptor_set_index - 1], 0,
+        NULL);
+
+    uint32_t push_constants[3] = { tex_w, tex_h, src_bias_words };
+    vkCmdPushConstants(cmd, r->compute.pipeline_layout,
+                       VK_SHADER_STAGE_COMPUTE_BIT, 0, sizeof(push_constants),
+                       push_constants);
+    vkCmdDispatch(cmd, group_count, 1, 1);
+    pgraph_vk_end_debug_marker(r, cmd);
 }
 
 bool pgraph_vk_compute_needs_finish(PGRAPHVkState *r)
@@ -602,6 +693,7 @@ void pgraph_vk_init_compute(PGRAPHState *pg)
     create_descriptor_sets(pg);
     create_compute_pipeline_layout(pg);
     pipeline_cache_init(r);
+    r->compute.deswizzle_pipeline = VK_NULL_HANDLE;
 }
 
 void pgraph_vk_finalize_compute(PGRAPHState *pg)
@@ -610,6 +702,10 @@ void pgraph_vk_finalize_compute(PGRAPHState *pg)
 
     assert(!r->in_command_buffer);
 
+    if (r->compute.deswizzle_pipeline != VK_NULL_HANDLE) {
+        vkDestroyPipeline(r->device, r->compute.deswizzle_pipeline, NULL);
+        r->compute.deswizzle_pipeline = VK_NULL_HANDLE;
+    }
     pipeline_cache_finalize(r);
     destroy_compute_pipeline_layout(r);
     destroy_descriptor_sets(pg);
