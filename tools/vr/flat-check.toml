@@ -1,0 +1,38 @@
+# Generic flat-verification config (canonical copy — deployed as
+# ~/xemu-assets/flat-check.toml; keep in sync). Duke gamepad on the
+# keyboard, VULKAN on the NVIDIA device, surface_scale=4 so the #2874
+# nearest-filter 2D path is exercised (sharp HUD/menus at >1x is the
+# thing to eyeball). ROM comes from flat-launch.sh's -dvd_path argument.
+# Paths are rig-local.
+
+[general]
+show_welcome = false
+games_dir = '/home/pacarey/roms/xbox'
+
+[general.updates]
+check = false
+
+[input.bindings]
+port1_driver = 'usb-xbox-gamepad'
+port1 = 'keyboard'
+
+[vr]
+enable = false
+
+[display]
+renderer = 'VULKAN'
+
+[display.vulkan]
+preferred_physical_device = 'NVIDIA GeForce RTX 4050 Laptop GPU'
+
+[display.quality]
+surface_scale = 4
+
+[display.window]
+vsync = false
+
+[sys.files]
+bootrom_path = '/home/pacarey/xemu-assets/mcpx_1.0.bin'
+flashrom_path = '/home/pacarey/xemu-assets/xbox-4627_debug.bin'
+eeprom_path = '/home/pacarey/xemu-assets/xbox-eeprom.bin'
+hdd_path = '/home/pacarey/xemu-assets/xbox_hdd.qcow2'

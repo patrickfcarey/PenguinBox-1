@@ -1,0 +1,638 @@
+general:
+  show_welcome:
+    type: bool
+    default: true
+  updates:
+    check:
+      type: bool
+      default: true
+  screenshot_dir: string
+  games_dir: string
+  skip_boot_anim: bool
+  # throttle_io: bool
+  last_viewed_menu_index: integer
+  user_token: string
+  snapshots:
+    shortcuts:
+      f5: string
+      f6: string
+      f7: string
+      f8: string
+    filter_current_game: bool
+
+input:
+  bindings:
+    port1_driver: string
+    port1: string
+    port2_driver: string
+    port2: string
+    port3_driver: string
+    port3: string
+    port4_driver: string
+    port4: string
+  peripherals:
+    port1:
+      peripheral_type_0: integer
+      peripheral_param_0: string
+      peripheral_type_1: integer
+      peripheral_param_1: string
+    port2:
+      peripheral_type_0: integer
+      peripheral_param_0: string
+      peripheral_type_1: integer
+      peripheral_param_1: string
+    port3:
+      peripheral_type_0: integer
+      peripheral_param_0: string
+      peripheral_type_1: integer
+      peripheral_param_1: string
+    port4:
+      peripheral_type_0: integer
+      peripheral_param_0: string
+      peripheral_type_1: integer
+      peripheral_param_1: string
+  gamecontrollerdb_path: string
+  auto_bind:
+    type: bool
+    default: true
+  # Deprecated: use 'enable_rumble' on the controller mapping settings instead
+  allow_vibration:
+    type: bool
+    default: true
+  background_input_capture: bool
+  keyboard_controller_scancode_map:
+    # Scancode reference : https://github.com/libsdl-org/SDL/blob/main/include/SDL_scancode.h
+    a:
+      type: integer
+      default: 4 # a
+    b:
+      type: integer
+      default: 5 # b
+    x:
+      type: integer
+      default: 27 # x
+    y:
+      type: integer
+      default: 28 # y
+    dpad_left:
+      type: integer
+      default: 80 # left
+    dpad_up:
+      type: integer
+      default: 82 # up
+    dpad_right:
+      type: integer
+      default: 79 # right
+    dpad_down:
+      type: integer
+      default: 81 # down
+    back:
+      type: integer
+      default: 42 # backspace
+    start:
+      type: integer
+      default: 40 # return
+    white:
+      type: integer
+      default: 30 # 1
+    black:
+      type: integer
+      default: 31 # 2
+    lstick_btn:
+      type: integer
+      default: 32 # 3
+    rstick_btn:
+      type: integer
+      default: 33 # 4
+    guide:
+      type: integer
+      default: 34 # 5
+    lstick_up:
+      type: integer
+      default: 8 # e
+    lstick_left:
+      type: integer
+      default: 22 # s
+    lstick_right:
+      type: integer
+      default: 9 # f
+    lstick_down:
+      type: integer
+      default: 7 # d
+    ltrigger:
+      type: integer
+      default: 26 # w
+    rstick_up:
+      type: integer
+      default: 12 # i
+    rstick_left:
+      type: integer
+      default: 13 # j
+    rstick_right:
+      type: integer
+      default: 15 # l
+    rstick_down:
+      type: integer
+      default: 14 # k
+    rtrigger:
+      type: integer
+      default: 18 # w
+  keyboard_sbc_scancode_map:
+    eject:
+      type: integer
+      default: 41 # esc
+    cockpit_hatch:
+      type: integer
+      default: 62 # F5
+    ignition:
+      type: integer
+      default: 63 # F6
+    start:
+      type: integer
+      default: 64 # F7
+    open_close:
+      type: integer
+      default: 74 # home
+    map_zoom_in_out:
+      type: integer
+      default: 77 # end
+    mode_select:
+      type: integer
+      default: 73 # insert
+    sub_monitor_mode_select:
+      type: integer
+      default: 76 # delete
+    zoom_in:
+      type: integer
+      default: 75 # Page Up
+    zoom_out:
+      type: integer
+      default: 78 # Page Down
+    fss:
+      type: integer
+      default: 97 # numpad 9
+    manipulator:
+      type: integer
+      default: 94 # numpad 6
+    line_color_change:
+      type: integer
+      default: 91 # numpad 3
+    washing:
+      type: integer
+      default: 45 # -
+    extinguisher:
+      type: integer
+      default: 8 # e
+    chaff:
+      type: integer
+      default: 6 # c
+    tank_detach:
+      type: integer
+      default: 96 # numpad 8
+    override:
+      type: integer
+      default: 93 # numpad 5
+    night_scope:
+      type: integer
+      default: 90 # numpad 2
+    func1:
+      type: integer
+      default: 95 # numpad 7
+    func2:
+      type: integer
+      default: 92 # numpad 4
+    func3:
+      type: integer
+      default: 89 # numpad 1
+    main_weapon_control:
+      type: integer
+      default: 35 # 6
+    sub_weapon_control:
+      type: integer
+      default: 36 # 7
+    magazine_change:
+      type: integer
+      default: 21 # r
+    com1:
+      type: integer
+      default: 30 # 1
+    com2:
+      type: integer
+      default: 31 # 2
+    com3:
+      type: integer
+      default: 32 # 3
+    com4:
+      type: integer
+      default: 33 # 4
+    com5:
+      type: integer
+      default: 34 # 5
+    sight_change:
+      type: integer
+      default: 20 # q
+    filt_control_system:
+      type: integer
+      default: 65 # F8
+    oxygen_supply_system:
+      type: integer
+      default: 66 # F9
+    fuel_flow_rate:
+      type: integer
+      default: 67 # F10
+    buffer_material:
+      type: integer
+      default: 68 # F11
+    vt_location_measurement:
+      type: integer
+      default: 69 # F12
+    gear_up:
+      type: integer
+      default: 225 # lshift
+    gear_down:
+      type: integer
+      default: 224 # lctrl
+    tuner_left:
+      type: integer
+      default: 54 # <
+    tuner_right:
+      type: integer
+      default: 55 # >
+    sight_change_up:
+      type: integer
+      default: 82 # up
+    sight_change_down:
+      type: integer
+      default: 81 # down
+    sight_change_left:
+      type: integer
+      default: 80 # left
+    sight_change_right:
+      type: integer
+      default: 79 # right
+    rotation_left:
+      type: integer
+      default: 4 # a
+    rotation_right:
+      type: integer
+      default: 7 # d
+    left_pedal:
+      type: integer
+      default: 44 #space
+    right_pedal:
+      type: integer
+      default: 26 # w
+    middle_pedal:
+      type: integer
+      default: 22 # s
+  gamepad_mappings:
+    type: array
+    items:
+      gamepad_id: string
+      enable_rumble:
+        type: bool
+        default: true
+      # steel_battalion_mapping:
+      # ...
+      controller_mapping:
+        a:
+          type: integer
+          default: 0
+        b:
+          type: integer
+          default: 1
+        x:
+          type: integer
+          default: 2
+        y:
+          type: integer
+          default: 3
+        back:
+          type: integer
+          default: 4
+        guide:
+          type: integer
+          default: 5
+        start:
+          type: integer
+          default: 6
+        lstick_btn:
+          type: integer
+          default: 7
+        rstick_btn:
+          type: integer
+          default: 8
+        lshoulder:
+          type: integer
+          default: 9
+        rshoulder:
+          type: integer
+          default: 10
+        dpad_up:
+          type: integer
+          default: 11
+        dpad_down:
+          type: integer
+          default: 12
+        dpad_left:
+          type: integer
+          default: 13
+        dpad_right:
+          type: integer
+          default: 14
+        axis_left_x:
+          type: integer
+          default: 0
+        axis_left_y:
+          type: integer
+          default: 1
+        axis_right_x:
+          type: integer
+          default: 2
+        axis_right_y:
+          type: integer
+          default: 3
+        axis_trigger_left:
+          type: integer
+          default: 4
+        axis_trigger_right:
+          type: integer
+          default: 5
+        invert_axis_left_x:
+          type: bool
+          default: false
+        invert_axis_left_y:
+          type: bool
+          default: false
+        invert_axis_right_x:
+          type: bool
+          default: false
+        invert_axis_right_y:
+          type: bool
+          default: false
+
+vr:
+  enable:
+    type: bool
+    default: false
+  screen_distance:
+    type: float
+    default: 2.0
+  screen_height:
+    type: float
+    default: 1.4
+  screen_arc:
+    type: float
+    default: 0.0
+  screen_vertical_offset:
+    type: float
+    default: 0.0
+  headlook_enable:
+    type: bool
+    default: false
+  headlook_sensitivity:
+    type: float
+    default: 1.0
+  headlook_invert_pitch:
+    type: bool
+    default: false
+  headlook_engine_period:
+    type: float
+    default: 0.0
+  headlook_yaw_addr:
+    type: string
+    default: ''
+  headlook_pitch_addr:
+    type: string
+    default: ''
+  headlook_gate_addr:
+    type: string
+    default: ''
+  headlook_gate_value:
+    type: integer
+    default: 1
+  headlook_gate_mask:
+    type: integer
+    default: 255
+  headlook_base_mode:
+    type: string
+    default: ''
+  headlook_base_ptr:
+    type: string
+    default: ''
+  headlook_base_offset:
+    type: integer
+    default: 0
+  headlook_base_aob:
+    type: string
+    default: ''
+  headlook_base_scan_start:
+    type: integer
+    default: 65536
+  headlook_base_scan_end:
+    type: integer
+    default: 0
+  headlook_base_validate_offset:
+    type: integer
+    default: 0
+  headlook_base_validate_equals:
+    type: integer
+    default: 0
+  hunt_enable:
+    type: bool
+    default: false
+  # SBC in-headset cockpit panel: a world-locked console readout composited
+  # as a second quad layer (docs/features/, vr_sbc_panel.*). Off by default;
+  # when off, the compositor does zero panel work (byte-identical off-state).
+  sbc_panel_enable:
+    type: bool
+    default: false
+  sbc_panel_anchor:
+    type: enum
+    values: [console, screen, world]
+    default: console
+  sbc_panel_distance:
+    type: float
+    default: 0.75
+  sbc_panel_drop:
+    type: float
+    default: 0.40
+  sbc_panel_tilt_deg:
+    type: float
+    default: 35.0
+  sbc_panel_width_m:
+    type: float
+    default: 0.50
+
+display:
+  renderer:
+    type: enum
+    values: ["NULL", OPENGL, VULKAN]
+    default: OPENGL
+  vulkan:
+    validation_layers: bool
+    debug_shaders: bool
+    assert_on_validation_msg: bool
+    preferred_physical_device: string
+  quality:
+    surface_scale:
+      type: integer
+      default: 1
+  filtering:
+    type: enum
+    values: [linear, nearest]
+    default: linear
+  window:
+    fullscreen_on_startup: bool
+    fullscreen_exclusive: bool
+    startup_size:
+      type: enum
+      values: [last_used, 640x480, 720x480, 1280x720, 1280x800, 1280x960, 1920x1080, 2560x1440, 2560x1600, 2560x1920, 3840x2160]
+      default: 1280x960
+    last_width:
+      type: integer
+      default: 640
+    last_height:
+      type: integer
+      default: 480
+    vsync:
+      type: bool
+      default: true
+  ui:
+    show_menubar:
+      type: bool
+      default: true
+    show_notifications:
+      type: bool
+      default: true
+    hide_cursor:
+      type: bool
+      default: true
+    use_animations:
+      type: bool
+      default: true
+    fit:
+      type: enum
+      values: [center, scale, stretch]
+      default: scale
+    aspect_ratio:
+      type: enum
+      values: [native, auto, 4x3, 16x9]
+      default: auto
+    scale:
+      type: float
+      default: 1
+    auto_scale:
+      type: bool
+      default: true
+    sbc_overlay:
+      # Steel Battalion cockpit input overlay (desktop mirror).
+      # docs/features/sbc-cockpit-overlay.md
+      enable:
+        type: bool
+        default: false
+      corner:
+        type: enum
+        values: [top_left, top_right, bottom_left, bottom_right]
+        default: bottom_right
+      opacity:
+        type: float
+        default: 0.85
+      show_key_labels:
+        type: bool
+        default: true
+      show_all_controls:
+        type: bool
+        default: false
+      toggle_scancode:
+        type: integer
+        default: 60 # F3
+  debug:
+    video:
+      transparency:
+        type: bool
+        default: false
+      x_pos:
+        type: number
+        default: 100.0
+      y_pos:
+        type: number
+        default: 100.0
+      x_winsize:
+        type: number
+        default: 600.0
+      y_winsize:
+        type: number
+        default: 150.0
+      advanced_tree_state:
+        type: bool
+        default: false
+  setup_nvidia_profile:
+    type: bool
+    default: true
+
+audio:
+  vp:
+    num_workers:
+      type: integer
+      default: 0  # 0 = auto
+  use_dsp: bool
+  use_dsp_jit:
+    type: bool
+    default: true
+  hrtf:
+    type: bool
+    default: true
+  volume_limit:
+    type: number
+    default: 1
+
+net:
+  enable: bool
+  backend:
+    type: enum
+    values: [nat, udp, pcap]
+    default: nat
+  pcap:
+    netif: string
+  udp:
+    bind_addr:
+      type: string
+      default: 0.0.0.0:9368
+    remote_addr:
+      type: string
+      default: 1.2.3.4:9368
+  nat:
+    forward_ports:
+      type: array
+      items:
+        host: integer
+        guest: integer
+        protocol:
+          type: enum
+          values: [tcp, udp]
+          default: tcp
+
+sys:
+  mem_limit:
+    type: enum
+    values: ['64', '128']
+    default: '64'
+  avpack:
+    type: enum
+    values: [scart, hdtv, vga, rfu, svideo, composite, none]
+    default: hdtv
+  files:
+    bootrom_path: string
+    flashrom_path: string
+    eeprom_path: string
+    hdd_path: string
+    dvd_path: string
+
+perf:
+  hard_fpu:
+    type: bool
+    default: true
+  cache_shaders:
+    type: bool
+    default: true

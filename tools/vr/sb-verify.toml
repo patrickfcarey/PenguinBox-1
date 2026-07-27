@@ -1,0 +1,50 @@
+[general]
+show_welcome = false
+games_dir = '/home/pacarey/roms/xbox'
+
+[general.updates]
+check = false
+
+[input.bindings]
+port1_driver = 'usb-steel-battalion'
+port1 = 'keyboard'
+
+# Collision-free SBC rebind (PR defaults put these on Esc/F5-F12, fighting
+# xemu + VR hotkeys — ISS-B12). Mnemonic layout; SDL scancodes.
+# Startup ritual becomes: H(atch) -> F,O,U,B,V toggles -> I(gnition) -> LShift.
+[input.keyboard_sbc_scancode_map]
+eject = 42                       # Backspace (was Esc — too easy to fat-finger)
+cockpit_hatch = 11               # H  (was F5)
+ignition = 12                    # I  (was F6)
+start = 40                       # Enter (was F7)
+filt_control_system = 9          # F  (was F8 — collided with VR recenter)
+oxygen_supply_system = 18        # O  (was F9 — collided with hunt dump)
+fuel_flow_rate = 24              # U  (was F10)
+buffer_material = 5              # B  (was F11)
+vt_location_measurement = 25     # V  (was F12)
+
+[vr]
+enable = false
+
+# Cockpit input overlay on by default for SB sessions (F3 also toggles it).
+[display.ui.sbc_overlay]
+enable = true
+
+[display]
+renderer = 'VULKAN'
+
+[display.vulkan]
+preferred_physical_device = 'NVIDIA GeForce RTX 4050 Laptop GPU'
+
+[display.quality]
+surface_scale = 1
+
+[display.window]
+vsync = false
+
+[sys.files]
+bootrom_path = '/home/pacarey/xemu-assets/mcpx_1.0.bin'
+flashrom_path = '/home/pacarey/xemu-assets/xbox-4627_debug.bin'
+eeprom_path = '/home/pacarey/xemu-assets/xbox-eeprom.bin'
+hdd_path = '/home/pacarey/xemu-assets/xbox_hdd.qcow2'
+dvd_path = '/home/pacarey/roms/xbox/Steel Battalion (USA).xiso.iso'

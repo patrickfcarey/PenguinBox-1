@@ -1,0 +1,34 @@
+/GNUmakefile
+/build/
+/.cache/
+/.vscode/
+*.pyc
+.sdk
+.stgit-*
+.git-submodule-status
+.gdb_history
+cscope.*
+tags
+TAGS
+GPATH
+GRTAGS
+GTAGS
+*~
+*.ast_raw
+*.depend_raw
+*.swp
+*.patch
+*.gcov
+
+build.log
+/dist
+/xemu.ini
+/macos-libs/
+/macos-pkgs/
+/xemu.iconset/
+
+# Machine-local environment — real rig/connection details live here and must
+# NEVER be committed: this repo is public (H-8). Template: .env.local.example
+/.env.local
+.claude/
+flicker-results/
