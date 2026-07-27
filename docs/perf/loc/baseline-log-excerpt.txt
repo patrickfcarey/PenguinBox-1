@@ -1,0 +1,135 @@
+# LoC baseline raw log excerpt — Mon Jul 27 09:35:25 AM UTC 2026
+# binary commit 8a50cbcd, full overlap stack, Vulkan, RTX 4050, config sb-floor-s1.toml
+## boot/init:
+xemu_version: 0.0.0
+xemu_commit: 8a50cbcd982d14a072c2714f7e2818988a5b3402
+xemu_date: Sun Jul 26 08:13:19 PM UTC 2026
+xemu_settings_set_path: config path: /home/pacarey/xemu-assets/sb-floor-s1.toml
+CPU: AMD Ryzen 7 7735HS with Radeon Graphics        
+OS_Version: Ubuntu 24.04.4 LTS
+GL_VENDOR: NVIDIA Corporation
+GL_RENDERER: NVIDIA GeForce RTX 4050 Laptop GPU/PCIe/SSE2
+GL_VERSION: 4.0.0 NVIDIA 595.84
+GL_SHADING_LANGUAGE_VERSION: 4.00 NVIDIA via Cg compiler
+GL geometry shader winding: 0, 0, 0, 0
+Created QEMU launch parameters: /home/pacarey/xemu_vr-research/build/qemu-system-i386 -machine xbox,bootrom=/home/pacarey/xemu-assets/mcpx_1.0.bin,kernel-irqchip=off,avpack=hdtv -device smbus-storage,file=/home/pacarey/xemu-assets/xbox-eeprom.bin -bios /home/pacarey/xemu-assets/xbox-4627_debug.bin -m 64 -drive index=0,media=disk,file=/home/pacarey/xemu-assets/xbox_hdd.qcow2,locked=on -drive index=1,media=cdrom,file=/home/pacarey/Downloads/Steel Battalion - Line of Contact (World) (En,,Ja)/Tekki Taisen - Stephase: XEMU_PHASE_TIMERS on — per-60-flip frame-phase decomposition enabled
+Error: Failed to open renderdoc library: librenderdoc.so: cannot open shared object file: No such file or directory
+Available physical devices:
+- AMD Radeon 680M (RADV REMBRANDT)
+- NVIDIA GeForce RTX 4050 Laptop GPU *
+- llvmpipe (LLVM 20.1.2, 256 bits)
+Selected physical device: NVIDIA GeForce RTX 4050 Laptop GPU
+- Vendor: 10de, Device: 28a1
+- Driver Version: 595.336.0
+Enabled device extensions:
+- VK_KHR_external_memory_fd
+- VK_KHR_external_semaphore_fd
+- VK_EXT_custom_border_color
+- VK_EXT_memory_budget
+inbatch-uploads: ON
+frame-overlap: S1 overlap-ready per-slot resource recycling ON
+pipe-opt: texture-only-dirty pipeline-lookup skip ON
+async-queries: STALLED occlusion-query resolve OFF
+async-reports: submit-then-poll STALLED report delivery ON
+batch-qreset: batched query reset + in-pass queries ON
+query-ring: deferred-epoch STALLED occlusion-query resolve OFF
+VK geometry shader winding: 0, 0, 0, 0
+predl: predictive readback OFF
+narrowfence: async early-submit OFF
+asyncpresent: submit-no-wait present ON
+radar-skip: N=0 -> OFF
+const-skip: per-draw uniform recompute+hash skip OFF
+nv2a: XEMU_ELEMENT_BATCH on — NV097_ARRAY_ELEMENT16/32 index runs consumed in bulk (INLINE_BATCH sibling)
+## phase (all windows):
+phase: mspf=24.0[9.4-367.8] run=24.0 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=9.0 pfifo_idle=15.0 present=0.8 light=58 heavy=2
+phase: mspf=16.7[13.1-20.2] run=16.7 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=8.1 pfifo_idle=8.6 present=0.8 light=60 heavy=0
+phase: mspf=16.7[13.5-19.4] run=16.7 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=8.2 pfifo_idle=8.5 present=0.7 light=60 heavy=0
+phase: mspf=16.6[12.5-19.7] run=16.6 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=8.2 pfifo_idle=8.5 present=0.8 light=60 heavy=0
+phase: mspf=17.0[11.8-30.5] run=17.0 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=8.5 pfifo_idle=8.5 present=0.7 light=60 heavy=0
+phase: mspf=17.1[7.6-40.8] run=17.1 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=7.2 pfifo_idle=9.9 present=0.7 light=59 heavy=1
+phase: mspf=16.7[6.3-26.7] run=16.7 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.2 pfifo_idle=15.5 present=0.4 light=60 heavy=0
+phase: mspf=82.2[16.1-3801.1] run=82.2 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=3.3 pfifo_idle=78.9 present=0.4 light=57 heavy=3
+phase: mspf=33.4[19.3-41.9] run=33.4 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.8 present=0.4 light=42 heavy=18
+phase: mspf=33.3[1.2-81.8] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=59 heavy=1
+phase: mspf=33.3[32.9-33.8] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.8 present=0.4 light=60 heavy=0
+phase: mspf=35.0[10.6-172.7] run=35.0 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=33.4 present=0.4 light=59 heavy=1
+phase: mspf=33.3[31.9-35.3] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.5-34.1] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.8 pfifo_idle=31.6 present=0.4 light=60 heavy=0
+phase: mspf=33.3[7.5-55.8] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.6 present=0.4 light=59 heavy=1
+phase: mspf=33.3[32.8-33.9] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.4-34.3] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[30.7-35.6] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.6-34.4] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.3-34.0] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.4-34.3] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.6-34.1] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.8-33.9] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.8-33.8] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.2-34.0] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.5-34.1] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.6 present=0.5 light=60 heavy=0
+phase: mspf=33.3[32.6-34.4] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.6 present=0.5 light=60 heavy=0
+phase: mspf=33.3[29.8-36.5] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.4-34.1] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.5-34.0] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.8-33.9] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.6 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.8-33.9] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[31.9-34.1] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.5 light=60 heavy=0
+phase: mspf=33.3[32.4-33.9] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.6-33.9] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.7-34.0] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.6 present=0.5 light=60 heavy=0
+phase: mspf=33.3[32.5-34.4] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.6-34.1] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.1-34.5] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.8-34.0] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.6-34.0] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.3-34.1] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.6 present=0.5 light=60 heavy=0
+phase: mspf=33.3[32.4-34.3] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.5-34.0] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.6 pfifo_idle=31.7 present=0.4 light=60 heavy=0
+phase: mspf=33.3[32.6-34.0] run=33.3 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.7 pfifo_idle=31.6 present=0.5 light=60 heavy=0
+phase: mspf=34.8[10.9-56.6] run=34.8 blocked=0.0 dl_stall=0.0(0.0x) dl_proc=0.0 pfifo_work=1.8 pfifo_idle=33.0 present=0.4 light=49 heavy=11
+phase: mspf=130.2[41.0-404.3] run=129.6 blocked=0.6 dl_stall=0.6(1.0x) dl_proc=0.6 pfifo_work=103.6 pfifo_idle=26.6 present=0.7 light=0 heavy=60
+phase: mspf=198.7[69.0-345.6] run=198.1 blocked=0.6 dl_stall=0.6(1.0x) dl_proc=0.6 pfifo_work=174.4 pfifo_idle=24.3 present=21.4 light=0 heavy=60
+phase: mspf=230.9[197.8-445.0] run=230.3 blocked=0.6 dl_stall=0.6(1.0x) dl_proc=0.6 pfifo_work=205.6 pfifo_idle=25.3 present=0.7 light=0 heavy=60
+phase: mspf=211.9[197.1-303.9] run=210.5 blocked=1.4 dl_stall=1.4(1.8x) dl_proc=1.2 pfifo_work=194.2 pfifo_idle=17.7 present=0.5 light=0 heavy=60
+phase: mspf=286.0[247.9-310.4] run=285.4 blocked=0.6 dl_stall=0.6(1.0x) dl_proc=0.6 pfifo_work=248.4 pfifo_idle=37.7 present=0.4 light=0 heavy=60
+phase: mspf=379.6[258.5-717.8] run=378.9 blocked=0.7 dl_stall=0.7(1.0x) dl_proc=0.6 pfifo_work=339.6 pfifo_idle=40.0 present=3.1 light=0 heavy=60
+phase: mspf=269.5[188.7-319.2] run=268.9 blocked=0.6 dl_stall=0.6(1.0x) dl_proc=0.6 pfifo_work=230.1 pfifo_idle=39.4 present=49.3 light=0 heavy=60
+phase: mspf=290.4[254.5-316.7] run=289.7 blocked=0.7 dl_stall=0.7(1.0x) dl_proc=0.6 pfifo_work=252.5 pfifo_idle=37.9 present=3.0 light=0 heavy=60
+phase: mspf=235.2[185.0-306.1] run=234.5 blocked=0.7 dl_stall=0.7(1.0x) dl_proc=0.6 pfifo_work=210.9 pfifo_idle=24.4 present=12.0 light=0 heavy=60
+phase: mspf=220.5[185.9-302.8] run=219.7 blocked=0.8 dl_stall=0.8(1.0x) dl_proc=0.6 pfifo_work=196.7 pfifo_idle=23.8 present=23.5 light=0 heavy=60
+phase: mspf=266.9[184.1-703.7] run=266.3 blocked=0.6 dl_stall=0.6(1.0x) dl_proc=0.6 pfifo_work=242.1 pfifo_idle=24.9 present=0.4 light=0 heavy=60
+phase: mspf=340.3[218.9-708.8] run=339.6 blocked=0.7 dl_stall=0.7(1.0x) dl_proc=0.6 pfifo_work=311.6 pfifo_idle=28.7 present=0.5 light=0 heavy=60
+phase: mspf=704.3[668.1-926.5] run=703.7 blocked=0.6 dl_stall=0.6(1.0x) dl_proc=0.6 pfifo_work=669.8 pfifo_idle=34.5 present=0.6 light=0 heavy=60
+## pfifo (top buckets, heavy scene):
+pfifo: work=174.4 method=56.3 texhash=1.8 queries=0.1 download=88.4 upload=1.2 submit=4.4 present=22.1 residual=0.1
+pfifo: work=205.6 method=39.7 texhash=1.9 queries=0.1 download=158.9 upload=1.5 submit=1.8 present=1.5 residual=0.1
+pfifo: work=194.2 method=26.2 texhash=2.0 queries=0.1 download=161.9 upload=1.6 submit=1.2 present=1.1 residual=0.1
+pfifo: work=248.4 method=21.1 texhash=2.2 queries=0.2 download=222.3 upload=0.9 submit=0.2 present=1.4 residual=0.1
+pfifo: work=339.6 method=31.5 texhash=3.9 queries=0.1 download=298.5 upload=1.2 submit=0.1 present=4.1 residual=0.1
+pfifo: work=230.1 method=19.3 texhash=1.9 queries=0.2 download=157.6 upload=0.7 submit=0.1 present=50.2 residual=0.1
+pfifo: work=252.5 method=21.7 texhash=2.4 queries=0.2 download=223.1 upload=1.0 submit=0.1 present=4.0 residual=0.1
+pfifo: work=210.9 method=18.0 texhash=1.8 queries=0.1 download=177.1 upload=0.9 submit=0.2 present=12.6 residual=0.1
+pfifo: work=196.7 method=15.7 texhash=1.6 queries=0.1 download=154.1 upload=0.8 submit=0.2 present=24.1 residual=0.1
+pfifo: work=242.1 method=25.3 texhash=2.4 queries=0.1 download=211.8 upload=1.0 submit=0.2 present=1.1 residual=0.1
+pfifo: work=311.6 method=32.2 texhash=3.5 queries=0.1 download=271.6 upload=1.2 submit=1.6 present=1.3 residual=0.1
+pfifo: work=669.8 method=72.5 texhash=9.6 queries=0.0 download=583.0 upload=2.2 submit=1.0 present=1.4 residual=0.1
+## pfifo2 (sub-decomp, heavy scene):
+pfifo2: method_synctex=5.3 method_const=4.2 method_attr=1.0 method_pipe=43.1 method_desc=0.8 method_draw=0.3 method_rpchurn=0.0 method_resid=1.6 present_gpuwait=21.4 present_composite=0.7 present_vrsubmit=0.0 present_resid=0.1
+pfifo2: method_synctex=0.5 method_const=5.0 method_attr=1.4 method_pipe=22.5 method_desc=1.4 method_draw=0.4 method_rpchurn=0.0 method_resid=8.5 present_gpuwait=0.7 present_composite=0.7 present_vrsubmit=0.0 present_resid=0.1
+pfifo2: method_synctex=1.4 method_const=5.3 method_attr=1.4 method_pipe=8.6 method_desc=1.5 method_draw=0.4 method_rpchurn=0.0 method_resid=7.6 present_gpuwait=0.5 present_composite=0.5 present_vrsubmit=0.0 present_resid=0.1
+pfifo2: method_synctex=29.8 method_const=2.9 method_attr=0.8 method_pipe=12.3 method_desc=1.2 method_draw=0.3 method_rpchurn=0.0 method_resid=0.0 present_gpuwait=0.4 present_composite=0.8 present_vrsubmit=0.0 present_resid=0.1
+pfifo2: method_synctex=92.7 method_const=3.0 method_attr=0.9 method_pipe=27.0 method_desc=1.8 method_draw=0.3 method_rpchurn=0.0 method_resid=0.0 present_gpuwait=3.1 present_composite=0.9 present_vrsubmit=0.0 present_resid=0.1
+pfifo2: method_synctex=21.5 method_const=2.8 method_attr=0.7 method_pipe=11.6 method_desc=1.1 method_draw=0.3 method_rpchurn=0.0 method_resid=0.0 present_gpuwait=49.3 present_composite=0.9 present_vrsubmit=0.0 present_resid=0.1
+pfifo2: method_synctex=35.6 method_const=2.8 method_attr=0.7 method_pipe=13.5 method_desc=1.2 method_draw=0.3 method_rpchurn=0.0 method_resid=0.0 present_gpuwait=3.0 present_composite=0.9 present_vrsubmit=0.0 present_resid=0.1
+pfifo2: method_synctex=14.4 method_const=2.9 method_attr=0.7 method_pipe=8.6 method_desc=1.0 method_draw=0.3 method_rpchurn=0.0 method_resid=0.0 present_gpuwait=12.0 present_composite=0.6 present_vrsubmit=0.0 present_resid=0.1
+pfifo2: method_synctex=8.0 method_const=2.6 method_attr=0.7 method_pipe=7.0 method_desc=0.9 method_draw=0.2 method_rpchurn=0.0 method_resid=0.0 present_gpuwait=23.5 present_composite=0.6 present_vrsubmit=0.0 present_resid=0.1
+pfifo2: method_synctex=35.6 method_const=3.4 method_attr=0.8 method_pipe=16.6 method_desc=1.3 method_draw=0.3 method_rpchurn=0.0 method_resid=0.0 present_gpuwait=0.4 present_composite=0.6 present_vrsubmit=0.0 present_resid=0.1
+pfifo2: method_synctex=77.2 method_const=4.3 method_attr=1.0 method_pipe=23.7 method_desc=2.0 method_draw=0.4 method_rpchurn=0.0 method_resid=0.0 present_gpuwait=0.5 present_composite=0.7 present_vrsubmit=0.0 present_resid=0.1
+pfifo2: method_synctex=321.3 method_const=4.4 method_attr=1.1 method_pipe=80.6 method_desc=4.3 method_draw=0.6 method_rpchurn=0.0 method_resid=0.0 present_gpuwait=0.6 present_composite=0.7 present_vrsubmit=0.0 present_resid=0.1
+## heavy nv2a-prof lines (renderpasses>=100):
+nv2a-prof: mspf=288 FINISH_SURFACE_CREATE=4 FINISH_SURFACE_DOWN=69 FINISH_PRESENTING=1 CLEAR=5 QUEUE_SUBMIT=76 QUEUE_SUBMIT_AUX=71 PIPELINE_NOTDIRTY=1302 PIPELINE_BIND=760 PIPELINE_RENDERPASSES=742 PIPELINE_LOOKUP_SKIP=771 BEGIN_ENDS=1335 INLINE_BUFFERS=397 INLINE_ELEMENTS=938 QUERY=9 QUERY_ASYNC_RESOLVE=2 REPORT_ASYNC_RETIRE=1 REPORT_FORCE_DRAIN=1 REPORT_AGEOUT_SUBMIT=2 SHADER_BIND=1335 SHADER_BIND_NOTDIRTY=1303 SHADER_UBO_DIRTY=1095 SHADER_UBO_NOTDIRTY=240 ATTR_BIND=2304 TEX_UPLOAD=2 UPLOAD_INBATCH=5 GEOM_BUFFER_UPDATE_2=938 GEOM_BUFFER_UPDATE_3=397 SURF_SWIZZLE=4 SURF_DOWNLOAD=71 SURF_UPLOAD=3 SURF_TO_TEX=672 SURF_TO_TEX_FALLBACK=68 SURF_CPU_READ=1 TEX_HASH=89 TEX_HASH_KB=40011 SURF_CPU_DL_WAIT=1 QUEUE_SUBMIT_1=71 QUEUE_SUBMIT_5=46 TLB_FLUSH_ALL=6 MEMCB_REGISTER=6 MEMCB_READ_DISPATCH=1 TB_TRANSLATE=39 TB_RECYCLE=12213 TLB_FILL=7594 MMIO_DISPATCH=380 ELEMENT_BATCH=1666 ARENA_IDX_KB=505 ARENA_VTX_KB=1175 ARENA_UNI_KB=6761 ARENA_IDX_PK_KB=383 ARENA_VTX_PK_KB=1175 ARENA_UNI_PK_KB=4448 DESC_MAX=726 TEX_UPLOAD_KB=6585 OVERLAP_RECYCLE_FULL=71 OVERLAP_SLOT_RETIRE=72 OVERLAP_FB_DEFER=9 OVERLAP_DESC_RESET=72 ASYNC_PRESENT_SUBMIT=46 ASYNC_PRESENT_GATE_WAIT=46
+nv2a-prof: mspf=210 FINISH_SURFACE_CREATE=4 FINISH_SURFACE_DOWN=2 FINISH_PRESENTING=1 CLEAR=4 QUEUE_SUBMIT=9 QUEUE_SUBMIT_AUX=4 PIPELINE_NOTDIRTY=1506 PIPELINE_BIND=707 PIPELINE_RENDERPASSES=683 PIPELINE_LOOKUP_SKIP=719 BEGIN_ENDS=1544 INLINE_BUFFERS=519 INLINE_ELEMENTS=1025 QUERY=9 QUERY_ASYNC_RESOLVE=2 REPORT_FORCE_DRAIN=2 REPORT_AGEOUT_SUBMIT=2 SHADER_BIND=1544 SHADER_BIND_NOTDIRTY=1507 SHADER_UBO_DIRTY=1299 SHADER_UBO_NOTDIRTY=245 ATTR_BIND=2768 TEX_UPLOAD=1 UPLOAD_INBATCH=4 GEOM_BUFFER_UPDATE_1=1 GEOM_BUFFER_UPDATE_2=1025 GEOM_BUFFER_UPDATE_3=519 SURF_SWIZZLE=4 SURF_DOWNLOAD=4 SURF_UPLOAD=3 SURF_TO_TEX=681 SURF_TO_TEX_FALLBACK=1 SURF_CPU_READ=1 TEX_HASH=24 TEX_HASH_KB=22891 SURF_CPU_DL_WAIT=1 QUEUE_SUBMIT_1=4 QUEUE_SUBMIT_5=37 TLB_FLUSH_ALL=6 MEMCB_REGISTER=6 MEMCB_READ_DISPATCH=1 TB_TRANSLATE=10 TB_RECYCLE=11169 TLB_FILL=8081 MMIO_DISPATCH=312 ELEMENT_BATCH=1870 ARENA_IDX_KB=745 ARENA_VTX_KB=1198 ARENA_UNI_KB=8036 ARENA_IDX_PK_KB=471 ARENA_VTX_PK_KB=1198 ARENA_UNI_PK_KB=4417 DESC_MAX=722 TEX_UPLOAD_KB=6329 VTX_RAM_SYNC_KB=8 VTX_RAM_WAR_WAIT=1 OVERLAP_RECYCLE_FULL=4 OVERLAP_SLOT_RETIRE=6 OVERLAP_FB_DEFER=9 OVERLAP_DESC_RESET=6 ASYNC_PRESENT_SUBMIT=37 ASYNC_PRESENT_GATE_WAIT=37
+nv2a-prof: mspf=257 FINISH_SURFACE_CREATE=4 FINISH_SURFACE_DOWN=58 FINISH_PRESENTING=1 CLEAR=5 QUEUE_SUBMIT=65 QUEUE_SUBMIT_AUX=60 PIPELINE_NOTDIRTY=1308 PIPELINE_BIND=758 PIPELINE_RENDERPASSES=742 PIPELINE_LOOKUP_SKIP=774 BEGIN_ENDS=1339 INLINE_BUFFERS=398 INLINE_ELEMENTS=941 QUERY=9 QUERY_ASYNC_RESOLVE=2 REPORT_FORCE_DRAIN=2 REPORT_AGEOUT_SUBMIT=2 SHADER_BIND=1339 SHADER_BIND_NOTDIRTY=1307 SHADER_UBO_DIRTY=1098 SHADER_UBO_NOTDIRTY=241 ATTR_BIND=2316 TEX_UPLOAD=2 UPLOAD_INBATCH=5 GEOM_BUFFER_UPDATE_2=941 GEOM_BUFFER_UPDATE_3=398 SURF_SWIZZLE=4 SURF_DOWNLOAD=60 SURF_UPLOAD=3 SURF_TO_TEX=683 SURF_TO_TEX_FALLBACK=57 SURF_CPU_READ=1 TEX_HASH=78 TEX_HASH_KB=37195 SURF_CPU_DL_WAIT=1 QUEUE_SUBMIT_1=60 QUEUE_SUBMIT_5=24 TLB_FLUSH_ALL=6 MEMCB_REGISTER=6 MEMCB_READ_DISPATCH=1 TB_TRANSLATE=3 TB_RECYCLE=12330 TLB_FILL=6479 MMIO_DISPATCH=369 ELEMENT_BATCH=1701 ARENA_IDX_KB=646 ARENA_VTX_KB=1159 ARENA_UNI_KB=6788 ARENA_IDX_PK_KB=468 ARENA_VTX_PK_KB=1159 ARENA_UNI_PK_KB=4436 DESC_MAX=725 TEX_UPLOAD_KB=6585 OVERLAP_RECYCLE_FULL=60 OVERLAP_SLOT_RETIRE=61 OVERLAP_FB_DEFER=9 OVERLAP_DESC_RESET=61 ASYNC_PRESENT_SUBMIT=24 ASYNC_PRESENT_GATE_WAIT=24
+nv2a-prof: mspf=703 FINISH_SURFACE_CREATE=4 FINISH_SURFACE_DOWN=602 FINISH_PRESENTING=1 CLEAR=4 QUEUE_SUBMIT=608 QUEUE_SUBMIT_AUX=603 PIPELINE_NOTDIRTY=1789 PIPELINE_BIND=642 PIPELINE_RENDERPASSES=616 PIPELINE_LOOKUP_SKIP=691 BEGIN_ENDS=1829 INLINE_BUFFERS=764 INLINE_ELEMENTS=1065 QUERY=1 QUERY_ASYNC_RESOLVE=1 REPORT_FORCE_DRAIN=1 SHADER_BIND=1829 SHADER_BIND_NOTDIRTY=1780 SHADER_UBO_DIRTY=1579 SHADER_UBO_NOTDIRTY=250 ATTR_BIND=3062 TEX_UPLOAD=4 UPLOAD_INBATCH=7 GEOM_BUFFER_UPDATE_1=2 GEOM_BUFFER_UPDATE_2=1065 GEOM_BUFFER_UPDATE_3=764 SURF_SWIZZLE=4 SURF_DOWNLOAD=603 SURF_UPLOAD=3 SURF_TO_TEX=14 SURF_TO_TEX_FALLBACK=600 SURF_CPU_READ=1 TEX_HASH=626 TEX_HASH_KB=177163 SURF_CPU_DL_WAIT=1 QUEUE_SUBMIT_1=603 QUEUE_SUBMIT_5=44 TLB_FLUSH_ALL=6 MEMCB_REGISTER=6 MEMCB_READ_DISPATCH=1 TB_TRANSLATE=14 TB_RECYCLE=30998 TLB_FILL=14351 MMIO_DISPATCH=534 ELEMENT_BATCH=1937 ARENA_IDX_KB=494 ARENA_VTX_KB=719 ARENA_UNI_KB=9694 ARENA_IDX_PK_KB=316 ARENA_VTX_PK_KB=719 ARENA_UNI_PK_KB=6076 DESC_MAX=10 TEX_UPLOAD_KB=10723 VTX_RAM_SYNC_KB=16 VTX_RAM_WAR_WAIT=2 OVERLAP_RECYCLE_FULL=603 OVERLAP_SLOT_RETIRE=604 OVERLAP_FB_DEFER=7 OVERLAP_DESC_RESET=604 ASYNC_PRESENT_SUBMIT=44 ASYNC_PRESENT_GATE_WAIT=44
+nv2a-prof: mspf=248 FINISH_SURFACE_CREATE=4 FINISH_SURFACE_DOWN=58 FINISH_NEED_BUFFER_SPACE=1 FINISH_PRESENTING=1 FINISH_FLIP_STALL=1 CLEAR=5 QUEUE_SUBMIT=66 QUEUE_SUBMIT_AUX=60 PIPELINE_NOTDIRTY=2116 PIPELINE_BIND=738 PIPELINE_RENDERPASSES=718 PIPELINE_LOOKUP_SKIP=787 BEGIN_ENDS=2151 INLINE_BUFFERS=844 INLINE_ELEMENTS=1307 QUERY=9 QUERY_ASYNC_RESOLVE=1 REPORT_FORCE_DRAIN=1 REPORT_AGEOUT_SUBMIT=2 SHADER_BIND=2151 SHADER_BIND_NOTDIRTY=2119 SHADER_UBO_DIRTY=1938 SHADER_UBO_NOTDIRTY=213 ATTR_BIND=3830 TEX_UPLOAD=2 UPLOAD_INBATCH=5 GEOM_BUFFER_UPDATE_1=2 GEOM_BUFFER_UPDATE_2=1307 GEOM_BUFFER_UPDATE_3=844 SURF_SWIZZLE=4 SURF_DOWNLOAD=60 SURF_UPLOAD=3 SURF_TO_TEX=658 SURF_TO_TEX_FALLBACK=57 SURF_CPU_READ=1 TEX_HASH=84 TEX_HASH_KB=37291 SURF_CPU_DL_WAIT=1 QUEUE_SUBMIT_1=60 QUEUE_SUBMIT_5=16 TLB_FLUSH_ALL=6 MEMCB_REGISTER=6 MEMCB_READ_DISPATCH=1 TB_TRANSLATE=3 TB_RECYCLE=10516 TLB_FILL=7612 MMIO_DISPATCH=374 ELEMENT_BATCH=2414 ARENA_IDX_KB=838 ARENA_VTX_KB=1165 ARENA_UNI_KB=11984 ARENA_IDX_PK_KB=448 ARENA_VTX_PK_KB=1121 ARENA_UNI_PK_KB=6329 DESC_MAX=1024 TEX_UPLOAD_KB=6585 VTX_RAM_SYNC_KB=16 VTX_RAM_WAR_WAIT=2 OVERLAP_RECYCLE_FULL=61 OVERLAP_SLOT_RETIRE=62 OVERLAP_FB_DEFER=9 OVERLAP_DESC_RESET=62 ASYNC_PRESENT_SUBMIT=16 ASYNC_PRESENT_GATE_WAIT=16
+nv2a-prof: mspf=691 FINISH_SURFACE_CREATE=4 FINISH_SURFACE_DOWN=606 FINISH_PRESENTING=1 CLEAR=5 QUEUE_SUBMIT=612 QUEUE_SUBMIT_AUX=607 PIPELINE_NOTDIRTY=1618 PIPELINE_BIND=639 PIPELINE_RENDERPASSES=621 PIPELINE_LOOKUP_SKIP=738 BEGIN_ENDS=1651 INLINE_BUFFERS=615 INLINE_ELEMENTS=1036 QUERY=1 QUERY_ASYNC_RESOLVE=1 REPORT_FORCE_DRAIN=1 SHADER_BIND=1651 SHADER_BIND_NOTDIRTY=1617 SHADER_UBO_DIRTY=1332 SHADER_UBO_NOTDIRTY=319 ATTR_BIND=2938 TEX_UPLOAD=4 UPLOAD_INBATCH=7 GEOM_BUFFER_UPDATE_2=1036 GEOM_BUFFER_UPDATE_3=615 SURF_SWIZZLE=4 SURF_DOWNLOAD=607 SURF_UPLOAD=3 SURF_TO_TEX=14 SURF_TO_TEX_FALLBACK=604 SURF_CPU_READ=1 TEX_HASH=630 TEX_HASH_KB=177203 SURF_CPU_DL_WAIT=1 QUEUE_SUBMIT_1=607 QUEUE_SUBMIT_5=54 TLB_FLUSH_ALL=6 MEMCB_REGISTER=6 MEMCB_READ_DISPATCH=1 TB_TRANSLATE=12 TB_RECYCLE=35973 TLB_FILL=15553 MMIO_DISPATCH=527 ELEMENT_BATCH=1856 ARENA_IDX_KB=421 ARENA_VTX_KB=692 ARENA_UNI_KB=8171 ARENA_IDX_PK_KB=250 ARENA_VTX_PK_KB=692 ARENA_UNI_PK_KB=4529 DESC_MAX=10 TEX_UPLOAD_KB=6787 OVERLAP_RECYCLE_FULL=607 OVERLAP_SLOT_RETIRE=609 OVERLAP_FB_DEFER=8 OVERLAP_DESC_RESET=608 ASYNC_PRESENT_SUBMIT=54 ASYNC_PRESENT_GATE_WAIT=54

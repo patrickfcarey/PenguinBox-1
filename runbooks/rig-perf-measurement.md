@@ -53,7 +53,11 @@ PIPE_OPT/ELEMENT_BATCH` + `TLB_FASTPATH`, `PHASE_TIMERS`), monitor at
 `GL_RENDERER: NVIDIA … RTX 4050` (discrete via PRIME, not the iGPU) and the
 toggle "ON" lines in `~/coldboot.log`. **H-2 first, as its own command** (pgrep
 `-x pcsx2-qt`, `-x mupen64plus`, `-f "[q]emu-system-i386"` with the `[q]` bracket
-over ssh) — never chain a launch behind the check.
+over ssh) — never chain a launch behind the check. "Its own command" means the
+ssh compound must contain NOTHING else: the `[q]` bracket only defends against
+the pgrep process itself — any sibling command in the same compound whose argv
+names the binary (`strings …/qemu-system-i386`, `ls build/qemu-system-i386`)
+matches `pgrep -f` and reads as a ghost live session (2026-07-27 field hit).
 
 ## Reusable frame-limiter RE method (for other titles)
 
