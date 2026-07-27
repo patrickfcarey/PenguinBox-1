@@ -219,6 +219,72 @@ fails with `Unknown section or instance ... usb-steel-battalion`; issue
 `loadvm` via the monitor socket after boot instead (`~/loc-bench-{off,ext}.sh`
 do this).
 
+## Round 2 (2026-07-27, same snapshot) — the eviction cascade
+
+With the fallback dead, the next measured wall was the **surface eviction
+cascade**: LoC re-uses the shadow map's memory — and its exact base — for
+small transient color blocks; every create/re-target evicted the 6.5 MB zeta
+(download, bursts to 173 ms) and the next full-map bind re-uploaded it
+(~127 MB/window). **`XEMU_ALIAS_SURFACES`** (opt-in) keeps large parents
+resident under much-smaller children (all three sites: create-overlap,
+target-switch incompatible-evict, plus look-deeper same-base scans at the
+texture bind and target switch; a draw_time freshness rule keeps the S2T
+paths alias-correct).
+
+| storm-snapshot metric | round 1 (EXT) | round 2 (EXT+ALIAS) |
+|---|---|---|
+| pfifo download | med 18.8 ms, bursts 173 | **med 0.8 ms, max 4.2** |
+| 1800×1800 re-upload dumps | 600/window | **0** |
+| med mspf | 60–63 | **50.1** (~20 fps; baseline was ~4) |
+| VK errors | 0 | 0 |
+
+Also measured: `CONST_SKIP` inert on LoC; mid-scene guest profile = **86%
+game code** (hot loop `0x33060–a0` = 22% — future RE target); the remaining
+~190 ms windows correlate 1:1 with **~700 exact-path surface→texture copies
+(≈700 renderpasses)** — the ping-pong volume itself.
+
+## Round 3 (2026-07-27) — the smoke wall falls: 4 fps → a steady ~20
+
+Field observation cracked it: the owner's screenshots showed slowdown tracking
+**smoke / haze / film-grain**, not unit count (two VTs at 18 fps; one VT in a
+dust plume at 4), plus a decisive tell — the TV-static scene transition ran
+slow *before the destination scene was ever shown*. Counters agreed:
+`ZC_REJ_ZETA_SURF = 12,182/window`. The cause: **soft-particle smoke sampling
+the still-bound D16 depth buffer** to depth-fade (plus the cockpit
+sub-monitors, its color-feedback sibling) — legal on Xbox unified memory,
+illegal to sample in Vulkan, so every one of ~700 binds/frame ran the full
+depth→texture conversion.
+
+**`XEMU_SURF2TEX_FEEDBACK`** (opt-in; requires `XEMU_SURF2TEX_ZEROCOPY`):
+sticky per-surface feedback mode → the surface rests in
+`VK_IMAGE_LAYOUT_GENERAL`; `color_general`/`zeta_general` render-pass variants
+carry the attachment layouts (render-pass *compatibility* ignores layouts, so
+pipelines and framebuffers interoperate); per-binding descriptor layouts; a
+`GENERAL→GENERAL` visibility barrier emitted **once per redraw** (per-bind
+flushing doubled the pass count — measured, then fixed); and **depth-aspect
+views over the D16 zeta**, bit-identical to the Y16 the conversion produced.
+
+| storm-scene metric | round 2 | **round 3 (v9.3)** |
+|---|---|---|
+| heavy frames | 190–250 ms, ~700 copies | **43–56 ms, ZERO copies** |
+| render passes (heavy) | ~700 | **~20** (merged) |
+| full-run mspf | med 50 / p90 197 | **med 50.0 / p90 51.7 / max 83** |
+| VK validation errors | 0 | 0 |
+
+**The 200 ms class is gone entirely** — the game holds a consistent ~20 fps in
+smoke, cockpit, and combat alike (owner-confirmed on screen). Remaining gap to
+30: the ~50 ms class is ≈3 vblank ticks; total work under 33.4 ms would lock
+30 fps, and the anatomy now has no single villain left.
+
+**Superseded design note (kept for provenance): zero-copy surface-as-texture** —
+sample the surface's VkImage directly through a view (as the GL backend
+always has) instead of copying per redraw-rebind cycle; kills the 700
+copy+barrier clusters and re-enables renderpass merging. Invasive (breaks the
+surfaces-rest-in-ATTACHMENT invariant; needs per-surface layout tracking +
+borrowed-image lifetime in the texture cache) — gated on owner visual
+validation of rounds 1–2 first, since the alias model intentionally serves
+pre-clobber depth for aliased ranges.
+
 ## Reproduce
 
 ```
