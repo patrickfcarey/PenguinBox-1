@@ -1336,6 +1336,64 @@ static bool surf2tex_zerocopy_enabled(void)
     return state == 1;
 }
 
+/* loc-graphics-research: XEMU_SURF2TEX_FEEDBACK getenv-once gate (v9).
+ * Requires XEMU_SURF2TEX_ZEROCOPY. Allows zero-copy sampling of the surface
+ * CURRENTLY bound as the render target — the Xbox feedback pattern behind
+ * Line of Contact's 3-4fps cockpit — via VK_IMAGE_LAYOUT_GENERAL and the
+ * color_general render-pass variant. XEMU_NO_SURF2TEX_FEEDBACK wins. */
+static bool surf2tex_feedback_enabled(void)
+{
+    static int state = -1;
+    if (state < 0) {
+        if (getenv("XEMU_NO_SURF2TEX_FEEDBACK")) {
+            state = 0;
+        } else {
+            state = (getenv("XEMU_SURF2TEX_FEEDBACK") &&
+                     surf2tex_zerocopy_enabled()) ? 1 : 0;
+            if (state == 1) {
+                fprintf(stderr,
+                        "nv2a: XEMU_SURF2TEX_FEEDBACK on — still-bound render "
+                        "targets are sampled zero-copy in GENERAL layout (the "
+                        "cockpit feedback pattern)\n");
+            } else if (getenv("XEMU_SURF2TEX_FEEDBACK")) {
+                fprintf(stderr,
+                        "nv2a: XEMU_SURF2TEX_FEEDBACK ignored — requires "
+                        "XEMU_SURF2TEX_ZEROCOPY\n");
+            }
+        }
+    }
+    return state == 1;
+}
+
+/* Ensure a borrowed surface is sampleable right now: non-feedback borrows
+ * rest in SHADER_READ_ONLY; feedback borrows rest in GENERAL and need a
+ * write->read visibility barrier for the draws just recorded. */
+static void surf2tex_zerocopy_ensure(PGRAPHState *pg, SurfaceBinding *surface)
+{
+    VkImageLayout want = surface->feedback_mode ?
+                             VK_IMAGE_LAYOUT_GENERAL :
+                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    bool need_transition = surface->image_layout != want;
+    /* Flush once per REDRAW, not per bind: repeated binds without new writes
+     * need no new visibility barrier, and each nondraw block breaks the open
+     * render pass (per-bind flushing doubled the pass count). */
+    bool need_flush = surface->feedback_mode &&
+                      surface->flushed_draw_time != surface->draw_time;
+    if (!need_transition && !need_flush) {
+        return;
+    }
+    VkCommandBuffer cmd = pgraph_vk_begin_nondraw_commands(pg);
+    if (need_transition) {
+        pgraph_vk_surface_transition(pg, cmd, surface, want);
+    }
+    if (need_flush) {
+        pgraph_vk_surface_feedback_flush(pg, cmd, surface);
+        surface->flushed_draw_time = surface->draw_time;
+        nv2a_profile_inc_counter(NV2A_PROF_ZC_FLUSHES);
+    }
+    pgraph_vk_end_nondraw_commands(pg, cmd);
+}
+
 /* loc-graphics-research: gather plan for the extended surface-as-texture path.
  *
  * The historical GPU copy path requires ONE resident surface whose base and
@@ -2283,14 +2341,65 @@ static void create_texture(PGRAPHState *pg, int texture_idx)
      * path). Component swizzles come from the texture format's component_map
      * on the view, which is always legal. */
     bool s2t_zerocopy = false;
+    bool s2t_feedback = false;
+    /* v9.3: zeta borrows — soft-particle smoke samples the D16 depth buffer
+     * (usually while it is the bound zeta). A depth view over the D16 image is
+     * bit-identical to the Y16 the historical conversion produced (same
+     * UNORM16 bits), so these binds borrow too. D16 only; the texture must be
+     * a 2-byte single-channel class. */
     if (surface_to_texture && !s2t_plan_valid && s2t_path == S2T_PATH_NONE &&
+        surf2tex_zerocopy_enabled() && surface != NULL && !surface->color &&
+        state.levels == 1 && !state.cubemap && state.dimensionality == 2) {
+        bool is_bound_zeta = (surface == r->zeta_binding);
+        if (!is_bound_zeta || surf2tex_feedback_enabled()) {
+            VkColorFormatInfo zc_vkf =
+                kelvin_color_format_vk_map[state.color_format];
+            if (surface->host_fmt.vk_format == VK_FORMAT_D16_UNORM &&
+                zc_vkf.vk_format &&
+                vk_format_texel_size(zc_vkf.vk_format) == 2) {
+                s2t_zerocopy = true;
+                if (is_bound_zeta && !surface->feedback_mode) {
+                    surface->feedback_mode = true;
+                    r->surface_generation++;
+                }
+                s2t_feedback = surface->feedback_mode;
+            } else {
+                nv2a_profile_inc_counter(NV2A_PROF_ZC_REJ_ZETA_SURF);
+            }
+        } else {
+            nv2a_profile_inc_counter(NV2A_PROF_ZC_REJ_ZETA_BOUND);
+        }
+    }
+    if (surface_to_texture && !s2t_plan_valid && s2t_path == S2T_PATH_NONE &&
+        !s2t_zerocopy && surf2tex_zerocopy_enabled() && surface != NULL &&
+        surface->color &&
+        (state.levels != 1 || state.cubemap || state.dimensionality != 2)) {
+        nv2a_profile_inc_counter(NV2A_PROF_ZC_REJ_SHAPE);
+    }
+    if (surface_to_texture && !s2t_plan_valid && s2t_path == S2T_PATH_NONE &&
+        !s2t_zerocopy &&
         surf2tex_zerocopy_enabled() && surface != NULL && surface->color &&
         state.levels == 1 && !state.cubemap && state.dimensionality == 2 &&
-        surface != r->color_binding && surface != r->zeta_binding) {
-        VkColorFormatInfo zc_vkf =
-            kelvin_color_format_vk_map[state.color_format];
-        if (zc_vkf.vk_format == surface->host_fmt.vk_format) {
-            s2t_zerocopy = true;
+        surface != r->zeta_binding) {
+        bool is_bound_target = (surface == r->color_binding);
+        if (!is_bound_target || surf2tex_feedback_enabled()) {
+            VkColorFormatInfo zc_vkf =
+                kelvin_color_format_vk_map[state.color_format];
+            if (zc_vkf.vk_format != surface->host_fmt.vk_format) {
+                nv2a_profile_inc_counter(NV2A_PROF_ZC_REJ_FMT);
+            }
+            if (zc_vkf.vk_format == surface->host_fmt.vk_format) {
+                s2t_zerocopy = true;
+                if (is_bound_target && !surface->feedback_mode) {
+                    /* First feedback bind of this surface: sticky-mark it
+                     * (GENERAL rest + color_general pass variant from here)
+                     * and fence every existing borrow — their descriptor
+                     * layouts are now stale. */
+                    surface->feedback_mode = true;
+                    r->surface_generation++;
+                }
+                s2t_feedback = surface->feedback_mode;
+            }
         }
     }
 
@@ -2357,17 +2466,9 @@ static void create_texture(PGRAPHState *pg, int texture_idx)
             // FIXME: Add draw time tracking
             if (snode->borrowed) {
                 /* Zero-copy: no content work — the view sees live surface
-                 * content. Ensure a sampleable layout and stamp the read for
-                 * the eviction gate. */
-                if (surface->image_layout !=
-                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-                    VkCommandBuffer zc_cmd =
-                        pgraph_vk_begin_nondraw_commands(pg);
-                    pgraph_vk_surface_transition(
-                        pg, zc_cmd, surface,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                    pgraph_vk_end_nondraw_commands(pg, zc_cmd);
-                }
+                 * content. Ensure a sampleable layout (+ feedback flush) and
+                 * stamp the read for the eviction gate. */
+                surf2tex_zerocopy_ensure(pg, surface);
                 surface->last_use_submit = r->submit_count;
             } else if (s2t_plan_valid) {
                 /* Gather dedup: re-copy only when any gathered surface was
@@ -2432,6 +2533,7 @@ static void create_texture(PGRAPHState *pg, int texture_idx)
     snode->possibly_dirty = false;
     snode->hash = content_hash;
     snode->borrowed = false; /* set below on the zero-copy build */
+    snode->descriptor_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     VkColorFormatInfo vkf = kelvin_color_format_vk_map[state.color_format];
     assert(vkf.vk_format != 0);
@@ -2471,6 +2573,9 @@ static void create_texture(PGRAPHState *pg, int texture_idx)
         snode->borrow_gen = r->surface_generation;
         snode->borrow_image = surface->image;
         snode->borrow_surface = surface;
+        snode->descriptor_layout =
+            s2t_feedback ? VK_IMAGE_LAYOUT_GENERAL :
+                           VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     } else {
         VmaAllocationCreateInfo alloc_create_info = {
             .usage = VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE,
@@ -2481,14 +2586,19 @@ static void create_texture(PGRAPHState *pg, int texture_idx)
                                 &snode->allocation, NULL));
     }
 
+    /* Zero-copy zeta borrows view the depth image in its own format+aspect
+     * (depth views cannot reinterpret formats); component swizzles from the
+     * texture's map still apply on the view. */
+    bool zc_zeta = s2t_zerocopy && !surface->color;
     VkImageViewCreateInfo image_view_create_info = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .image = s2t_zerocopy ? surface->image : snode->image,
         .viewType = state.cubemap ?
             VK_IMAGE_VIEW_TYPE_CUBE :
             dimensionality_to_vk_image_view_type[state.dimensionality],
-        .format = vkf.vk_format,
-        .subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+        .format = zc_zeta ? surface->host_fmt.vk_format : vkf.vk_format,
+        .subresourceRange.aspectMask =
+            zc_zeta ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT,
         .subresourceRange.baseMipLevel = 0,
         .subresourceRange.levelCount =
             s2t_zerocopy ? 1 : image_create_info.mipLevels,
@@ -2623,18 +2733,11 @@ static void create_texture(PGRAPHState *pg, int texture_idx)
 
     if (surface_to_texture) {
         if (s2t_zerocopy) {
-            /* Zero-copy: no content work; ensure a sampleable layout and
-             * stamp the read for the eviction gate. */
-            if (surface->image_layout !=
-                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-                VkCommandBuffer zc_cmd = pgraph_vk_begin_nondraw_commands(pg);
-                pgraph_vk_surface_transition(
-                    pg, zc_cmd, surface,
-                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-                pgraph_vk_end_nondraw_commands(pg, zc_cmd);
-            }
+            /* Zero-copy: no content work; ensure a sampleable layout (+
+             * feedback flush) and stamp the read for the eviction gate. */
+            surf2tex_zerocopy_ensure(pg, surface);
             surface->last_use_submit = r->submit_count;
-            snode->current_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            snode->current_layout = snode->descriptor_layout;
             snode->draw_time = surface->draw_time;
         } else if (s2t_plan_valid) {
             copy_gather_plan_to_texture(pg, &s2t_plan, snode,
@@ -2704,11 +2807,11 @@ void pgraph_vk_bind_textures(NV2AState *d)
             continue;
         }
         SurfaceBinding *bs = b->borrow_surface;
-        if (bs->image_layout != VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-            VkCommandBuffer zc_cmd = pgraph_vk_begin_nondraw_commands(pg);
-            pgraph_vk_surface_transition(
-                pg, zc_cmd, bs, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-            pgraph_vk_end_nondraw_commands(pg, zc_cmd);
+        VkImageLayout bs_want = bs->feedback_mode ?
+                                    VK_IMAGE_LAYOUT_GENERAL :
+                                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        if (bs->image_layout != bs_want || bs->feedback_mode) {
+            surf2tex_zerocopy_ensure(pg, bs);
             bs->last_use_submit = r->submit_count;
         }
     }

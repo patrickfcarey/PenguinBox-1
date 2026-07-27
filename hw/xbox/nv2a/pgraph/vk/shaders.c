@@ -315,7 +315,11 @@ void pgraph_vk_update_descriptor_sets(PGRAPHState *pg)
     VkDescriptorImageInfo image_infos[NV2A_MAX_TEXTURES];
     for (int i = 0; i < NV2A_MAX_TEXTURES; i++) {
         image_infos[i] = (VkDescriptorImageInfo){
-            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+            /* v9 feedback: borrows of a feedback-mode surface are sampled in
+             * GENERAL; every other binding declares SHADER_READ_ONLY. */
+            .imageLayout = r->texture_bindings[i]->descriptor_layout ?
+                               r->texture_bindings[i]->descriptor_layout :
+                               VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
             .imageView = r->texture_bindings[i]->image_view,
             .sampler = r->texture_bindings[i]->sampler,
         };

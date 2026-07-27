@@ -405,6 +405,12 @@ static void init_render_pass_state(PGRAPHState *pg, RenderPassState *state)
                               VK_FORMAT_UNDEFINED;
     state->zeta_format = r->zeta_binding ? r->zeta_binding->host_fmt.vk_format :
                                            VK_FORMAT_UNDEFINED;
+    /* v9 feedback: pick the GENERAL-layout render-pass variant when the bound
+     * color target is a feedback surface (sampled while bound). */
+    state->color_general =
+        r->color_binding && r->color_binding->feedback_mode;
+    state->zeta_general =
+        r->zeta_binding && r->zeta_binding->feedback_mode;
 }
 
 static VkRenderPass create_render_pass(PGRAPHVkState *r, RenderPassState *state)
@@ -419,6 +425,9 @@ static VkRenderPass create_render_pass(PGRAPHVkState *r, RenderPassState *state)
 
     VkAttachmentReference color_reference;
     if (color) {
+        VkImageLayout color_layout =
+            state->color_general ? VK_IMAGE_LAYOUT_GENERAL :
+                                   VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         attachments[num_attachments] = (VkAttachmentDescription){
             .format = state->color_format,
             .samples = VK_SAMPLE_COUNT_1_BIT,
@@ -426,17 +435,21 @@ static VkRenderPass create_render_pass(PGRAPHVkState *r, RenderPassState *state)
             .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
             .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
             .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-            .initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-            .finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+            .initialLayout = color_layout,
+            .finalLayout = color_layout,
         };
         color_reference = (VkAttachmentReference){
-            num_attachments, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+            num_attachments, color_layout
         };
         num_attachments++;
     }
 
     VkAttachmentReference depth_reference;
     if (zeta) {
+        VkImageLayout zeta_layout =
+            state->zeta_general ?
+                VK_IMAGE_LAYOUT_GENERAL :
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         attachments[num_attachments] = (VkAttachmentDescription){
             .format = state->zeta_format,
             .samples = VK_SAMPLE_COUNT_1_BIT,
@@ -444,11 +457,11 @@ static VkRenderPass create_render_pass(PGRAPHVkState *r, RenderPassState *state)
             .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
             .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
             .stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE,
-            .initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-            .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            .initialLayout = zeta_layout,
+            .finalLayout = zeta_layout,
         };
         depth_reference = (VkAttachmentReference){
-            num_attachments, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            num_attachments, zeta_layout,
         };
         num_attachments++;
     }
@@ -1504,16 +1517,17 @@ static void begin_render_pass(PGRAPHState *pg)
      * write-after-read barrier for the borrowed sampling). No-op otherwise. */
     if (r->color_binding &&
         r->color_binding->image_layout !=
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL) {
-        pgraph_vk_surface_transition(pg, r->command_buffer, r->color_binding,
-                                     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+            pgraph_vk_surface_rest_layout(r->color_binding)) {
+        pgraph_vk_surface_transition(
+            pg, r->command_buffer, r->color_binding,
+            pgraph_vk_surface_rest_layout(r->color_binding));
     }
     if (r->zeta_binding &&
         r->zeta_binding->image_layout !=
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL) {
+            pgraph_vk_surface_rest_layout(r->zeta_binding)) {
         pgraph_vk_surface_transition(
             pg, r->command_buffer, r->zeta_binding,
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+            pgraph_vk_surface_rest_layout(r->zeta_binding));
     }
 
     unsigned int vp_width = pg->surface_binding_dim.width,

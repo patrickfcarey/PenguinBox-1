@@ -54,6 +54,15 @@ typedef struct MemorySyncRequirement {
 typedef struct RenderPassState {
     VkFormat color_format;
     VkFormat zeta_format;
+    /* loc-graphics-research (v9 feedback): color attachment lives in
+     * VK_IMAGE_LAYOUT_GENERAL (the surface is also sampled while bound).
+     * Extends the render-pass AND pipeline cache keys; render-pass
+     * compatibility ignores layouts, so pipelines/framebuffers interoperate
+     * across variants. */
+    bool color_general;
+    /* v9.3: same for the depth attachment — soft-particle smoke samples the
+     * bound D16 zeta (depth-fade), so it lives in GENERAL too. */
+    bool zeta_general;
 } RenderPassState;
 
 typedef struct RenderPass {
@@ -131,6 +140,14 @@ typedef struct SurfaceBinding {
     size_t size;
 
     bool cleared;
+    /* v9 feedback: sticky — this surface is sampled while bound as the render
+     * target; it RESTS in VK_IMAGE_LAYOUT_GENERAL and its render passes use
+     * the color_general variant. */
+    bool feedback_mode;
+    /* v9: draw_time already covered by a feedback visibility flush — flush
+     * once per redraw, not per bind (a per-bind flush measurably doubled the
+     * render-pass count). */
+    int flushed_draw_time;
     int frame_time;
     int draw_time;
     bool draw_dirty;
@@ -260,6 +277,9 @@ typedef struct TextureBinding {
     /* Valid ONLY while borrow_gen == r->surface_generation (no invalidation
      * since the borrow was taken); used for the bind-time layout ensure. */
     SurfaceBinding *borrow_surface;
+    /* Layout this binding's descriptor declares (SHADER_READ_ONLY_OPTIMAL for
+     * owned nodes and plain borrows; GENERAL for feedback-surface borrows). */
+    VkImageLayout descriptor_layout;
 } TextureBinding;
 
 typedef struct QueryReport {
