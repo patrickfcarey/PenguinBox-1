@@ -269,7 +269,7 @@ views over the D16 zeta**, bit-identical to the Y16 the conversion produced.
 | heavy frames | 190–250 ms, ~700 copies | **43–56 ms, ZERO copies** |
 | render passes (heavy) | ~700 | **~20** (merged) |
 | full-run mspf | med 50 / p90 197 | **med 50.0 / p90 51.7 / max 83** |
-| VK validation errors | 0 | 0 |
+| VK validation errors | not measured¹ | not measured¹ |
 
 **The 200 ms class is gone entirely** — the game holds a consistent ~20 fps in
 smoke, cockpit, and combat alike (owner-confirmed on screen). Remaining gap to
@@ -294,3 +294,35 @@ ssh <rig>  ~/coldboot-play-loc-ext.sh      # same + XEMU_SURF2TEX_EXT=1 → ~/co
 ```
 H-2 (live-session check) before any relaunch. Do **not** attach gdb mid-scene
 (perturbs mspf; pauses the guest).
+
+
+## Correction (2026-07-27, post-review)
+
+Two errors in the rounds above, both found after the fact:
+
+**1. ¹ "0 VK validation errors" was meaningless.** Validation layers are gated
+on `display.vulkan.validation_layers`, which was never set on the rig — so they
+were **off for every run in this campaign**. Grepping the logs for validation
+messages could only ever return zero. Those numbers are not evidence of
+correctness and have been struck; the work in rounds 1–3 was never
+validation-checked. (Enabling the setting still produced no output; the layer
+plumbing needs its own investigation before any such claim is made again.)
+
+**2. The v9.3 depth borrow was unsound — owner caught it visually.** Sampling
+the D16 zeta through a depth-aspect view was justified as "bit-identical to the
+Y16 the conversion produced." It is not. LoC binds its shadow map as
+`LU_IMAGE_DEPTH_Y16_FLOAT` (a `depth` format): the conversion copies **raw
+16-bit bits** into a Y16 texture and the fragment shader applies the Xbox
+float-depth decode, whereas a `D16_UNORM` view makes the **sampler**
+pre-normalize to [0,1] and the shader then decodes on top — a double decode
+feeding wrong values into the shadow comparison. Visible as blocky/incorrect
+shadow pixels; no counter could have seen it.
+
+**v9.4 fixes both concerns:** depth surfaces are never borrowed (the converting
+copy path is restored), and the speed is recovered soundly by running that copy
+**once per frame** instead of once per bind — `draw_time` advances with every
+particle draw, so the old key re-converted the whole shadow map ~700×/frame,
+while the depth soft particles sample is the *finished opaque scene*, for which
+one snapshot per frame is correct. Measured: copies/frame ~700 → **1–2**,
+renderpasses ~700 → **20–23**, mspf med **50.0** / p90 **50.9** — i.e. v9.3's
+performance with v9.3's bug removed.

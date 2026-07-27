@@ -271,6 +271,11 @@ typedef struct TextureBinding {
      * borrows a surface's VkImage (image/allocation are VK_NULL_HANDLE and
      * must not be destroyed). borrow_image + borrow_gen (snapshot of
      * r->surface_generation) staleness-check the borrow on cache hit. */
+    /* v9.4: pg->frame_time of the last depth-as-texture copy into this node.
+     * Soft-particle smoke samples the finished opaque depth ~700x/frame; one
+     * copy per frame is sufficient and correct (the depth it wants is final
+     * before transparents draw). */
+    int copied_frame_time;
     bool borrowed;
     uint32_t borrow_gen;
     VkImage borrow_image;
